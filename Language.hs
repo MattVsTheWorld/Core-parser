@@ -103,11 +103,13 @@ preludeDefs
 ----------------------
 
 -- pprint :: CoreProgram -> String
-
+-- Pre 1.5.2
+{-
 pprExpr :: CoreExpr -> String
 pprExpr (ENum n) = show n
 pprExpr (EVar v) = v
 pprExpr (EAp e1 e2) = pprExpr e1 ++ " " ++ pprAExpr e2
+-}
 -- to be continued ##
 pprAExpr :: CoreExpr -> String
 pprAExpr e -- ##
@@ -139,3 +141,9 @@ iAppend :: Iseq -> Iseq -> Iseq     -- Append two iseqs
 iNewline :: Iseq                    -- New line with indentation
 iIndent :: Iseq -> Iseq             -- Indent an iseq
 iDisplay :: Iseq -> String          -- Turn an iseq into a String
+
+-- ++ has been replaced by iAppend
+-- iStr added around literal strings
+pprExpr :: CoreExpr -> Iseq
+pprExpr (Evar v) = iStr v -- ~~ iStr turns v, a string, into an iSeq
+pprExpr (EAp e1 e2) = (pprExpr e1) 'iAppend' (iStr " ") 'iAppend' (pprAExpr e2)
