@@ -19,7 +19,7 @@ data Expr a
     deriving (Show,Read) -- Text? ##
 
     
-type CoreExpr = Expr Name  -- possibly useless
+type CoreExpr = Expr Name
 
 type Name = String
 
@@ -66,7 +66,7 @@ type Program a = [ScDefn a]
 type CoreProgram = Program Name
 
 -- a supercombinator definition contains
-    -- (sueprcombinator definition = can define functions/CFA if no args)
+    -- (supercombinator definition = can define functions/CFA if no args)
         -- ~~ mathematical expression fully bound and self contained
     -- (1) name of the supercombinator = Name
     -- (2) its arguments = [a] (Can be empty)
@@ -104,12 +104,12 @@ preludeDefs
 
 -- pprint :: CoreProgram -> String
 -- Pre 1.5.2
-{-
+
 pprExpr :: CoreExpr -> String
 pprExpr (ENum n) = show n
 pprExpr (EVar v) = v
 pprExpr (EAp e1 e2) = pprExpr e1 ++ " " ++ pprAExpr e2
--}
+
 -- to be continued ##
 pprAExpr :: CoreExpr -> String
 pprAExpr e -- ##
@@ -134,16 +134,82 @@ test5 = length (pprExpr (mkMultiAp 20000 (EVar "f") (EVar "x"))) --(25.14 secs, 
 -- Interface of the data type Iseq
 -- operations which can be performed on the data type iseq
 -- (+ type of such operations)
+-- Whole sections needs revising ##
 
-iNil :: Iseq                        -- Emtpy iseq   
+{- LUL
+data Iseq = Iseq String
+            deriving (Show)
+
+iNil :: Iseq                        -- Emtpy iseq
+iNil = Iseq ""    
+
+iStr :: String -> Iseq              -- Turn string into iseq
+iStr str = Iseq str
+
+-- ## Che senso ha sto giro?
+-- BIG RED FLAG
+iAppend :: Iseq -> Iseq -> Iseq     -- Append two iseqs
+iAppend (Iseq a) (Iseq b) = Iseq (a ++ b) -- ++ not good
+
+iNewline :: Iseq                    -- New line with indentation
+iNewline = Iseq "\n" -- ## + number of spaces
+
+--iIndent :: Iseq -> Iseq             -- Indent an iseq
+
+iDisplay :: Iseq -> String          -- Turn an iseq into a String
+iDisplay (Iseq str) = str
+
+-}
+
+
+data Iseq = iNil
+            | IStr String
+            | IAppend Iseq Iseq
+
+iNil :: Iseq                        -- Emtpy iseq  
 iStr :: String -> Iseq              -- Turn string into iseq
 iAppend :: Iseq -> Iseq -> Iseq     -- Append two iseqs
 iNewline :: Iseq                    -- New line with indentation
 iIndent :: Iseq -> Iseq             -- Indent an iseq
 iDisplay :: Iseq -> String          -- Turn an iseq into a String
 
+
 -- ++ has been replaced by iAppend
 -- iStr added around literal strings
 pprExpr :: CoreExpr -> Iseq
 pprExpr (Evar v) = iStr v -- ~~ iStr turns v, a string, into an iSeq
-pprExpr (EAp e1 e2) = (pprExpr e1) 'iAppend' (iStr " ") 'iAppend' (pprAExpr e2)
+pprExpr (EAp e1 e2) = (pprExpr e1) `iAppend` (iStr " ") `iAppend` (pprAExpr e2)
+
+-- extension of pprExpr to handle let and letrec
+-- pprExpr for Let
+-- (Let (local definition, is it recursive, Definition [(a, Expr a)])), body
+pprExpr (ELet isrec defns expr) 
+        = iConcat [ iStr keyword, iNewLine, -- let / letrec
+                    iStr " ", iIndent (pprDefns), iNewline, -- Space and indent definition
+                    iStr "in ", pprExpr expr] -- body
+        where
+            keyword | not isrec = "let"
+                    | isrec     = "letrec"
+
+pprDefns :: [(Name,CoreExpr)] -> Iseq
+pprDefns defns = iInterleave sep (map pprDefn defns)
+                    where sep = iConcat [ iStr ";", iNewline]
+
+pprDefn :: (Name, CoreExpr) -> Iseq
+pprDefns (name, expr)
+            = iConcat [ iStr name, iStr " = ", iIndent (pprExpr expr)]
+
+-- Take a list of iseqs and uses iAppend to concatenate into a single iseq            
+iConcat :: [Iseq] -> Iseq   
+iConcat [x] = x;  
+iConcat (x:xs) = x `iAppend` (iConcat xs) 
+iConcat _ = iNil; --  ##
+
+-- similar, interleaves a specified iseq between each adjacent pair
+-- [a, b, c, d]
+-- x
+-- [a, x, b, x, c, x, d]
+iInterleave :: Iseq -> [Iseq] -> Iseq
+iInterleave iseq [x] = x
+iInterleave iseq (x:xs) = x `iAppend` iseq `iAppend` (iInterleave iseq xs)
+iInterleave _ _= iNil -- ##
