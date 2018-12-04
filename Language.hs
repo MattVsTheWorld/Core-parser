@@ -132,11 +132,10 @@ test5 = length (pprExpr (mkMultiAp 20000 (EVar "f") (EVar "x"))) --(25.14 secs, 
 -- Interface of the data type Iseq
 -- operations which can be performed on the data type iseq
 -- (+ type of such operations)
-{-
+
 iNil :: Iseq                        -- Emtpy iseq   
 iStr :: String -> Iseq              -- Turn string into iseq
 iAppend :: Iseq -> Iseq -> Iseq     -- Append two iseqs
 iNewline :: Iseq                    -- New line with indentation
 iIndent :: Iseq -> Iseq             -- Indent an iseq
 iDisplay :: Iseq -> String          -- Turn an iseq into a String
--}
