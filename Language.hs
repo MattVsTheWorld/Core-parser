@@ -63,8 +63,6 @@ isAtomicExpr (ENum n) = True
 isAtomicExpr e        = False
 -}
 
-
-
 -- a Core-language program is just a list of supercombinator definitions
 type Program a = [ScDefn a]
 type CoreProgram = Program Name
@@ -125,47 +123,6 @@ pprAExpr e -- ##
 mkMultiAp :: Int -> CoreExpr -> CoreExpr -> CoreExpr
 mkMultiAp n e1 e2 = foldll EAp e1 (take n e2s)
             where e2s = e2 : e2s
-
--- EX 1.1
--- :set +s
-
-test1 = length (pprExpr (mkMultiAp 10 (EVar "f") (EVar "x")))
-test2 = length (pprExpr (mkMultiAp 100 (EVar "f") (EVar "x")))
-test3 = length (pprExpr (mkMultiAp 1000 (EVar "f") (EVar "x")))
-test4 = length (pprExpr (mkMultiAp 10000 (EVar "f") (EVar "x"))) -- (2.24 secs, 8,591,972,104 bytes)
--- (pprExpr (mkMultiAp 15000 (EVar "f") (EVar "x"))) (7.06 secs, 19,621,938,760 bytes)
-test5 = length (pprExpr (mkMultiAp 20000 (EVar "f") (EVar "x"))) --(25.14 secs, 35,049,543,328 bytes)
--}
--- 1.5.2
--- Interface of the data type Iseq
--- operations which can be performed on the data type iseq
--- (+ type of such operations)
--- Whole sections needs revising ##
-
-{- LUL
-data Iseq = Iseq String
-            deriving (Show)
-
-iNil :: Iseq                        -- Emtpy iseq
-iNil = Iseq ""    
-
-iStr :: String -> Iseq              -- Turn string into iseq
-iStr str = Iseq str
-
--- ## Che senso ha sto giro?
--- BIG RED FLAG
-iAppend :: Iseq -> Iseq -> Iseq     -- Append two iseqs
-iAppend (Iseq a) (Iseq b) = Iseq (a ++ b) -- ++ not good
-
-iNewline :: Iseq                    -- New line with indentation
-iNewline = Iseq "\n" -- ## + number of spaces
-
---iIndent :: Iseq -> Iseq             -- Indent an iseq
-
-iDisplay :: Iseq -> String          -- Turn an iseq into a String
-iDisplay (Iseq str) = str
-
--}
 
 
 data Iseq = INil
