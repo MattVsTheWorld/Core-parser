@@ -76,13 +76,10 @@ pprExpr (EAp e1 e2) = (pprExpr e1) `iAppend` (iStr " ") `iAppend` (pprAExpr e2)
             IsRec                       -- boolean with True = recursive
             [(a, Expr a)]               -- Definitions
             (Expr a)                    -- Body of let(rec)
-
 aaa x y = let 
             r = 3*x 
               s = 6*y
-              in  r + s
-
-              
+              in  r + s             
             -}
 pprExpr (ELet isrec defns expr) 
         = iConcat [ iStr keyword, iNewline, -- let / letrec
@@ -112,7 +109,7 @@ iConcat _ = iNil; --  ##
 -- x
 -- [a, x, b, x, c, x, d]
 iInterleave :: Iseq -> [Iseq] -> Iseq
---iInterleave iseq [x] = x ##
+--iInterleave iseq [x] = x ## -- Notably, without this it puts iNil at the end?
 iInterleave iseq (x:xs) = x `iAppend` iseq `iAppend` (iInterleave iseq xs)
 iInterleave _ _= iNil -- ##
 
