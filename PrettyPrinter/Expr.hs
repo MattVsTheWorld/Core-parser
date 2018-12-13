@@ -46,6 +46,10 @@ type CoreScDefn = ScDefn Name
 ----------------
 -- Let/Letrec --
 ----------------
+{- mmmh
+data IsRec = NonRecursive | recursive
+        deriving Show
+-}
 type IsRec = Bool
 
 recursive, nonRecursive :: IsRec

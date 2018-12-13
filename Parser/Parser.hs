@@ -47,3 +47,15 @@ instance Alternative Parser where
 sat :: (Char -> Bool) -> Parser Char
 sat p = do x <- item
            if p x then return x else empty
+
+
+
+{-
+parseExpr :: Parser (Expr Name)
+
+parseAExpr :: Parser (Expr Name)
+
+parseDef :: Parser (Def Name)
+
+parseAlt :: Parser (Alter Name)
+-}
