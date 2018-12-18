@@ -1,5 +1,6 @@
 module Parser where
 
+import Expr
 import Control.Applicative
 import Data.Char
 
@@ -49,8 +50,27 @@ sat p = do x <- item
            if p x then return x else empty
 
 
+-- ESEMPI
 
 {-
+
+parseProg :: Parser (Program Name)
+parseProg :: do p <- parseScDef
+                do character ';'
+                    ps <- parseProg
+                    return (p:ps)
+                <|> return [p]
+
+parseScDef :: Parser (ScDef Name)
+parseScDef = do v  <- parseVar      -- DEFINE 
+                pf <- many parseVar -- DEFINE
+                character '='
+                body <- parseExpr -- DEFINE
+                return (v, pf, body)
+-}
+
+{- to define
+parseVar :: Parser ( ?? )
 parseExpr :: Parser (Expr Name)
 
 parseAExpr :: Parser (Expr Name)
