@@ -42,7 +42,8 @@ instance Alternative Parser where
     p <|> q = P (\inp -> case parse p inp of
                         []        -> parse q inp
                         [(v,out)] -> [(v,out)])
-    
+
+-- verifies a predicate, return a Parser Char
 sat :: (Char -> Bool) -> Parser Char
 sat p = do x <- item
            if p x then return x else empty
@@ -58,6 +59,13 @@ upper = sat isUpper
 
 letter :: Parser Char
 letter = sat isAlpha
+
+-- small variation on isAlphanum to include the '_' character
+isVarch :: Char -> Bool
+isVarch c = isAlphaNum c || ( c == '_')
+
+varch :: Parser Char
+varch = sat isVarch
 
 alphanum :: Parser Char
 alphanum = sat isAlphaNum
@@ -75,7 +83,7 @@ string (x:xs) = do char x
 -- lowercase letter followed by 0 or more (many) alphanum
 ident :: Parser String 
 ident = do x  <- lower
-           xs <- many alphanum
+           xs <- many varch -- ## _ ?
            return (x:xs)
 
 -- parser for natural numbers
@@ -119,6 +127,10 @@ integer = token int
 symbol :: String -> Parser String
 symbol xs = token (string xs)
 
+-- ##
+character :: Char -> Parser Char
+character c = token (char c)
+ 
 -- Parse non empty list of natural numbers
 nats :: Parser [Int]
 nats = do symbol "["
