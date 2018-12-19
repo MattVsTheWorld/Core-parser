@@ -62,7 +62,7 @@ parseDef :: Parser (Def Name)
 parseDef = do v <- identifier
               character '='
               body <- parseExpr
-              return (v, body)
+              return (v, body) -- Def Name is a tuple
 
 
 -- EConstr Int Int
@@ -90,9 +90,24 @@ parseAExpr = do v <- parseVar
 
 parseExpr :: Parser (Expr Name)
 -- let
---parseExpr = do 
--- Atomic
-parseExpr = parseAExpr
+  -- ELet IsRec [Def a] (Expr a)
+parseExpr = do symbol "let" 
+               defns <- some parseDef
+               symbol "in"
+               body <- parseExpr
+               return (ELet NonRecursive defns body)
+              <|>
+            parseAExpr -- Atomic
+
+
+
+-- letrec
+
+-- case
+
+-- lambda
+
+
 {- to define
 parseVar :: Parser ( ?? )  DONE
 parseExpr :: Parser (Expr Name)
