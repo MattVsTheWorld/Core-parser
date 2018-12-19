@@ -34,8 +34,18 @@ parseScDef = do v  <- parseVar      -- DEFINE
 
 -- now calls ident which considers '_'
 -- Need Parser (EVar Name), not Parser String
-parseVar :: Parser String
-parseVar = identifier
+exprIdent :: Parser (Expr Name) 
+exprIdent = do x  <- lower
+               xs <- many varch
+               let a = EVar (x:xs) -- make into evar
+               return a
+
+parseVar :: Parser (Expr Name)
+parseVar = token exprIdent
+
+parseNum :: Parser (Expr Name)
+parseNum = do xs <- some digit -- 1 or more digits
+              return (ENum (read xs)) -- read per trasformarlo in Int
 {-
 -- Def -> var = expr
 parseDef :: Parser (Def Name)
@@ -45,9 +55,15 @@ parseDef = do v <- parseVar
               return (v, body)
 -}
 -- AExpr -> var | num | Pack{num,num} | (expr)
-parseAExpr :: Parser String
+parseAExpr :: Parser (Expr Name)
 parseAExpr = do v <- parseVar
                 return (v)
+               <|>
+             do n <- parseNum
+                return (n)
+             --  <|>
+             -- Pack
+             -- ( expr ) 
 
 {-            
 --parseExpr :: Parser (Expr Name)
