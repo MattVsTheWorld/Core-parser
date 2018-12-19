@@ -7,12 +7,12 @@ data Expr a
             | EConstr Int Int           -- Constructor tag arity
             | EAp (Expr a) (Expr a)     -- Applications
             | ELet                      -- Let(rec) expressions
-                IsRec                       -- NonRecursive | recursive
+                IsRec                       -- NonRecursive | Recursive
                 [Def a]              -- Definitions
                 (Expr a)                    -- Body of let(rec)
             | ECase                     -- Case expression
                 (Expr a)                    -- Expression to scrutinise
-            [Alter a]                   -- Alternatives
+                [Alter a]                   -- Alternatives
             | ELam [a] (Expr a)         -- Lambda abstractions
     deriving (Show)
 

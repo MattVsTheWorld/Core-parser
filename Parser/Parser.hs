@@ -10,6 +10,8 @@ import Data.Char
 IMPORTANT NOTES:
 - Only works with integer numbers so far
 - atomic expression treatment of (expr) needs checking
+  -- In particular, things like "True" ? how to handle?
+  -- missing application / binops
 -}
 
 -- ESEMPI
@@ -89,10 +91,9 @@ parseAExpr = do v <- identifier
                 return (c)
                <|>
              do character '('
-                expr <- parseExpr -- correct? mmmh
+                e <- parseExpr -- correct? mmmh
                 character ')'
-                return (expr)
-             --parseExpr  -- 
+                return (e)
              -- ( expr ) 
 
 parseExpr :: Parser (Expr Name)
@@ -104,15 +105,43 @@ parseExpr = do symbol "let"
                body <- parseExpr
                return (ELet NonRecursive defns body)
               <|>
+              -- letrec
+            do symbol "letrec" -- BAD SOLUTION
+               defns <- some parseDef
+               symbol "in"
+               body <- parseExpr
+               return (ELet Recursive defns body)
+              <|>
+              -- case expr of alts
+              -- ECase (Expr a) [Alter a]          
+            do symbol "case"
+               e <- parseExpr
+               symbol "of"
+               alts <- some parseAlt
+               return (ECase e alts)
+              <|>
+              -- lamda
+              -- ELam [a] (Expr a)
+              -- \ var1_n . expr
+           -- do character '\\' 
+               
+            --  <|>
+              -- atomic
             parseAExpr -- Atomic
 
-
-
--- letrec
-
--- case
+-- <num> var1_n -> expr
+-- Alter a = (Int, [a], Expr a)
+parseAlt :: Parser (Alter Name)
+parseAlt = do character '<'
+              n <- integer
+              character '>'
+              vs <- many identifier
+              symbol "->"
+              e <- parseExpr
+              return (n,vs,e)
 
 -- lambda
+
 
 
 {- to define
