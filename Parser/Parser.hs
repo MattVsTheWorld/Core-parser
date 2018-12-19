@@ -6,6 +6,12 @@ import Parser_Utils
 import Control.Applicative
 import Data.Char
 
+{-
+IMPORTANT NOTES:
+- Only works with integer numbers so far
+- Should parseVar be String? mmmh
+-}
+
 -- ESEMPI
 {-
 parseProg :: Parser (Program Name)
@@ -26,10 +32,10 @@ banana   x   xs     =       x + xs
 {-
 parseScDef :: Parser (ScDef Name)
 parseScDef = do v  <- parseVar      -- DEFINE 
-                 pf <- many parseVar -- DEFINE
-                 character '='       -- throw away
-                 body <- parseExpr   -- DEFINE
-                 return (v, pf, body)
+                pf <- many parseVar -- DEFINE
+                character '='       -- throw away
+                body <- parseExpr   -- DEFINE
+                return (v, pf, body)
 -}
 
 -- now calls ident which considers '_'
@@ -40,20 +46,24 @@ exprIdent = do x  <- lower
                let a = EVar (x:xs) -- make into evar
                return a
 
+-- SUSPICION : should be string. wat do?
 parseVar :: Parser (Expr Name)
 parseVar = token exprIdent
 
+-- #
 parseNum :: Parser (Expr Name)
 parseNum = do xs <- some digit -- 1 or more digits
               return (ENum (read xs)) -- read per trasformarlo in Int
-{-
+
+
 -- Def -> var = expr
+-- Needs a checkup
 parseDef :: Parser (Def Name)
-parseDef = do v <- parseVar
+parseDef = do v <- identifier
               character '='
-              body = parseExpr
+              body <- parseExpr
               return (v, body)
--}
+
 
 -- EConstr Int Int
 parseConstr :: Parser (Expr Name)
@@ -64,6 +74,8 @@ parseConstr = do symbol "Pack"
                  arity <- natural
                  character '}'
                  return (EConstr tag arity)
+
+
 -- AExpr -> var | num | Pack{num,num} | (expr)
 parseAExpr :: Parser (Expr Name)
 parseAExpr = do v <- parseVar
@@ -76,19 +88,18 @@ parseAExpr = do v <- parseVar
                 return (c)
              -- ( expr ) 
 
-{-            
---parseExpr :: Parser (Expr Name)
-parseExpr :: Parser CoreExpr
+parseExpr :: Parser (Expr Name)
 -- let
-parseExpr = do 
--}
+--parseExpr = do 
+-- Atomic
+parseExpr = parseAExpr
 {- to define
-parseVar :: Parser ( ?? )
+parseVar :: Parser ( ?? )  DONE
 parseExpr :: Parser (Expr Name)
 
-parseAExpr :: Parser (Expr Name)
+parseAExpr :: Parser (Expr Name) ALMOST
 
-parseDef :: Parser (Def Name)
+parseDef :: Parser (Def Name) NEEDS EXPR
 
 parseAlt :: Parser (Alter Name)
 -}
