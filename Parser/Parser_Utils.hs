@@ -94,6 +94,17 @@ nat :: Parser Int
 nat = do xs <- some digit -- 1 or more digits
          return (read xs) -- read per trasformarlo in Int
 
+-- UNUSED : fractionals
+fract :: Parser Double
+fract = do x <- some digit
+           character '.'
+           xs <- some digit
+           return (read (x ++ "." ++ xs))
+
+fractional :: Parser Double
+fractional = token fract
+-- /UNUSED : fractionals
+
 -- Parser to remove spaces comprising zero or more space/tab/newlines
 -- () dummy result value
 space :: Parser ()
@@ -126,6 +137,7 @@ natural = token nat
 
 integer :: Parser Int
 integer = token int
+
 
 symbol :: String -> Parser String
 symbol xs = token (string xs)

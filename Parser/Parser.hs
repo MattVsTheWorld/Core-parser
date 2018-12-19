@@ -47,16 +47,17 @@ exprIdent = do x  <- lower
                let a = EVar (x:xs) -- make into evar
                return a
 
--- SUSPICION : should be string. wat do?
+-- SUSPICION : should be string. wat do? FIXED
 parseVar :: Parser (Expr Name)
 parseVar = token exprIdent
 -}
--- #
+-- 
+{- 
 parseNum :: Parser (Expr Name)
 parseNum = do xs <- some digit -- 1 or more digits
               return (ENum (read xs)) -- read per trasformarlo in Int
 
-
+-}
 -- Def -> var = expr
 -- Needs a checkup
 parseDef :: Parser (Def Name)
@@ -81,14 +82,14 @@ parseAExpr :: Parser (Expr Name)
 parseAExpr = do v <- identifier
                 return (EVar v)
                <|>
-             do n <- parseNum
-                return (n)
+             do n <- integer -- # only works for integers -- fract?
+                return (ENum n)
                <|>
              do c <- parseConstr
                 return (c)
                <|>
              do character '('
-                expr <- parseExpr
+                expr <- parseExpr -- correct? mmmh
                 character ')'
                 return (expr)
              --parseExpr  -- 
@@ -115,12 +116,9 @@ parseExpr = do symbol "let"
 
 
 {- to define
-parseVar :: Parser ( ?? )  DONE
-parseExpr :: Parser (Expr Name)
-
-parseAExpr :: Parser (Expr Name) ALMOST
-
-parseDef :: Parser (Def Name) NEEDS EXPR
-
-parseAlt :: Parser (Alter Name)
+parseVar :: Parser ( ?? )         DONE
+parseExpr :: Parser (Expr Name)   IN THE MAKING
+parseAExpr :: Parser (Expr Name)  KINDA DONE
+parseDef :: Parser (Def Name)     DONE
+parseAlt :: Parser (Alter Name)   FUC
 -}
