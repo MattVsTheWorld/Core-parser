@@ -31,7 +31,7 @@ type Alter a = (Int, [a], Expr a)
 type CoreAlt = Alter Name
 
 -- a Core-language program is just a list of supercombinator definitions
-type Program a = [ScDefn a]
+type Program a = [ScDef a]
 type CoreProgram = Program Name
 
 -- a supercombinator definition contains
@@ -40,8 +40,8 @@ type CoreProgram = Program Name
     -- (1) name of the supercombinator = Name
     -- (2) its arguments = [a] (Can be empty)
     -- (3) its body = Expr a
-type ScDefn a = (Name, [a], Expr a)
-type CoreScDefn = ScDefn Name
+type ScDef a = (Name, [a], Expr a)
+type CoreScDef = ScDef Name
 
 ----------------
 -- Let/Letrec --

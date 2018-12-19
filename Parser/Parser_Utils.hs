@@ -66,6 +66,7 @@ isVarch c = isAlphaNum c || ( c == '_')
 
 varch :: Parser Char
 varch = sat isVarch
+-------------------------
 
 alphanum :: Parser Char
 alphanum = sat isAlphaNum
@@ -73,6 +74,8 @@ alphanum = sat isAlphaNum
 char :: Char -> Parser Char
 char x = sat (== x)
 
+-- Empty string can always be parsed
+-- recursively parse charactgers of a non-empty string
 string :: String -> Parser String
 string [] = return []
 string (x:xs) = do char x
