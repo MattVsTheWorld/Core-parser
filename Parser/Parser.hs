@@ -54,6 +54,16 @@ parseDef = do v <- parseVar
               body = parseExpr
               return (v, body)
 -}
+
+-- EConstr Int Int
+parseConstr :: Parser (Expr Name)
+parseConstr = do symbol "Pack"
+                 character '{'
+                 tag <- natural
+                 character ','
+                 arity <- natural
+                 character '}'
+                 return (EConstr tag arity)
 -- AExpr -> var | num | Pack{num,num} | (expr)
 parseAExpr :: Parser (Expr Name)
 parseAExpr = do v <- parseVar
@@ -61,8 +71,9 @@ parseAExpr = do v <- parseVar
                <|>
              do n <- parseNum
                 return (n)
-             --  <|>
-             -- Pack
+               <|>
+             do c <- parseConstr
+                return (c)
              -- ( expr ) 
 
 {-            
