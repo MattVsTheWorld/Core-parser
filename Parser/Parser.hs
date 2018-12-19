@@ -9,7 +9,7 @@ import Data.Char
 {-
 IMPORTANT NOTES:
 - Only works with integer numbers so far
-- Should parseVar be String? mmmh
+- atomic expression treatment of (expr) needs checking
 -}
 
 -- ESEMPI
@@ -31,14 +31,15 @@ banana   x   xs     =       x + xs
 -}
 {-
 parseScDef :: Parser (ScDef Name)
-parseScDef = do v  <- parseVar      -- DEFINE 
-                pf <- many parseVar -- DEFINE
+parseScDef = do v  <- identifier      --= parseVar
+                pf <- many identifier -- 
                 character '='       -- throw away
                 body <- parseExpr   -- DEFINE
                 return (v, pf, body)
 -}
 
 -- now calls ident which considers '_'
+{-
 -- Need Parser (EVar Name), not Parser String
 exprIdent :: Parser (Expr Name) 
 exprIdent = do x  <- lower
@@ -49,7 +50,7 @@ exprIdent = do x  <- lower
 -- SUSPICION : should be string. wat do?
 parseVar :: Parser (Expr Name)
 parseVar = token exprIdent
-
+-}
 -- #
 parseNum :: Parser (Expr Name)
 parseNum = do xs <- some digit -- 1 or more digits
@@ -75,17 +76,22 @@ parseConstr = do symbol "Pack"
                  character '}'
                  return (EConstr tag arity)
 
-
 -- AExpr -> var | num | Pack{num,num} | (expr)
 parseAExpr :: Parser (Expr Name)
-parseAExpr = do v <- parseVar
-                return (v)
+parseAExpr = do v <- identifier
+                return (EVar v)
                <|>
              do n <- parseNum
                 return (n)
                <|>
              do c <- parseConstr
                 return (c)
+               <|>
+             do character '('
+                expr <- parseExpr
+                character ')'
+                return (expr)
+             --parseExpr  -- 
              -- ( expr ) 
 
 parseExpr :: Parser (Expr Name)
