@@ -12,34 +12,8 @@ IMPORTANT NOTES:
 - atomic expression treatment of (expr) needs checking
   -- In particular, things like "True" ? how to handle?
   -- missing application / binops
+  -- identifier should discriminate with keywords
 -}
-
--- ESEMPI
-{-
-parseProg :: Parser (Program Name)
-parseProg :: do p <- parseScDef
-                do character ';'
-                    ps <- parseProg
-                    return (p:ps)
-                <|> return [p]
--}
-
-{-
-Supercombinator = definizione di funzione
-banana   x   xs     =       x + xs
-  ^      ^   ^      ^       ^^^^^^
- Var    var var   char       expr
- Name      [a]               Expr a   
--}
-{-
-parseScDef :: Parser (ScDef Name)
-parseScDef = do v  <- identifier      --= parseVar
-                pf <- many identifier -- 
-                character '='       -- throw away
-                body <- parseExpr   -- DEFINE
-                return (v, pf, body)
--}
-
 -- now calls ident which considers '_'
 {-
 -- Need Parser (EVar Name), not Parser String
@@ -60,6 +34,30 @@ parseNum = do xs <- some digit -- 1 or more digits
               return (ENum (read xs)) -- read per trasformarlo in Int
 
 -}
+
+-- ESEMPI
+parseProg :: Parser (Program Name)
+parseProg = do p <- parseScDef
+               do character ';'
+                  ps <- parseProg
+                  return (p:ps)
+                 <|> return [p]
+
+{-
+Supercombinator = definizione di funzione
+banana   x   xs     =       x + xs
+  ^      ^   ^      ^       ^^^^^^
+ Var    var var   char       expr
+ Name      [a]               Expr a   
+-}
+parseScDef :: Parser (ScDef Name)
+parseScDef = do v  <- identifier      -- = parseVar
+                pf <- many identifier -- 
+                character '='       -- throw away
+                body <- parseExpr   -- DEFINE
+                return (v, pf, body)
+
+
 -- Def -> var = expr
 -- Needs a checkup
 parseDef :: Parser (Def Name)
@@ -96,6 +94,8 @@ parseAExpr = do v <- identifier
                 return (e)
              -- ( expr ) 
 
+-- let/letrec _ in _ || case _ of _ || lambda || function composition?
+keywords = ["let","letrec","in","case","of","\\"{-,"."-}]
 parseExpr :: Parser (Expr Name)
 -- let
   -- ELet IsRec [Def a] (Expr a)
@@ -120,12 +120,16 @@ parseExpr = do symbol "let"
                alts <- some parseAlt
                return (ECase e alts)
               <|>
-              -- lamda
+              -- lambda
               -- ELam [a] (Expr a)
               -- \ var1_n . expr
-           -- do character '\\' 
-               
-            --  <|>
+              -- \ ((spazio)) vars . ((== ->)) espressione
+            do symbol "\\ "
+               vs <- some identifier
+               character '.'
+               e <- parseExpr
+               return (ELam vs e)
+              <|>
               -- atomic
             parseAExpr -- Atomic
 
@@ -142,12 +146,13 @@ parseAlt = do character '<'
 
 -- lambda
 
-
+-- TEST
+test_prog = "f = 3; g x y = let z = x in z; h x = case (let y = x in y) of  <1> -> 2 <2> -> 5"
 
 {- to define
 parseVar :: Parser ( ?? )         DONE
 parseExpr :: Parser (Expr Name)   IN THE MAKING
 parseAExpr :: Parser (Expr Name)  KINDA DONE
 parseDef :: Parser (Def Name)     DONE
-parseAlt :: Parser (Alter Name)   FUC
+parseAlt :: Parser (Alter Name)   DONE?
 -}
