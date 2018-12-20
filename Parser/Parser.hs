@@ -15,6 +15,7 @@ IMPORTANT NOTES:
   -- missing application / binops
   -- identifier should discriminate with keywords
   -- maybe there should be some choices? (see parseProg)
+  -- are we using empty at all? Am I retarded?
 -}
 -- now calls ident which considers '_'
 {-
@@ -96,12 +97,18 @@ parseAExpr = do v <- identifier
                 return (e)
              -- ( expr ) 
 
--- let/letrec _ in _ || case _ of _ || lambda || function composition?
-keywords = ["let","letrec","in","case","of","\\"{-,"."-}]
+
 parseExpr :: Parser (Expr Name)
--- let
-  -- ELet IsRec [Def a] (Expr a)
-parseExpr = do symbol "let" 
+            -- function application
+            -- needs precedence
+parseExpr = {- Nope
+                do (e:es)  <- some parseAExpr
+               return (EAp () ())
+               <|>
+               -}
+            -- let
+            -- ELet IsRec [Def a] (Expr a)
+            do symbol "let" 
                defns <- some parseDef
                symbol "in"
                body <- parseExpr
@@ -133,7 +140,33 @@ parseExpr = do symbol "let"
                return (ELam vs e)
               <|>
               -- atomic
-            parseAExpr -- Atomic
+            parseAExpr -- expr1? ##
+
+{-
+parseExpr1 :: Parser (Expr Name)
+parseExpr1 = do parseExpr2
+                symbol <- '|'
+                parseExpr1
+               <|> parseExpr2
+parseExpr2 :: Parser (Expr Name)
+parseExpr3 :: Parser (Expr Name)
+parseExpr4 :: Parser (Expr Name)
+parseExpr5 :: Parser (Expr Name)
+parseExpr6 :: Parser (Expr Name)
+-}
+
+
+--[+ - * /    < <= == ~= >=      & | ]
+-- POTENTIALLY VERY USELESS
+-- turns out it was useless
+{-
+type Binop a = Name 
+parseBin :: Parser Binop
+              -- arithop
+parseBin = do a <- character '+'
+-}
+              -- relop
+              -- boolop
 
 -- <num> var1_n -> expr
 -- Alter a = (Int, [a], Expr a)
@@ -145,7 +178,6 @@ parseAlt = do character '<'
               symbol "->"
               e <- parseExpr
               return (n,vs,e)
-
 -- lambda
 
 -- TEST

@@ -84,9 +84,15 @@ string (x:xs) = do char x
 
 -- Parser for identifier (var name)
 -- lowercase letter followed by 0 or more (many) alphanum
+-- Added _ as a legal character for identifiers
+-- added illegality of keywords ?? ## NOT DOne 
+-- let/letrec _ in _ || case _ of _ || lambda || function composition?
+--keywords = ["let","letrec","in","case","of"{-,"\\","."-}]
+
 ident :: Parser String 
 ident = do x  <- lower
-           xs <- many varch -- ## _ ?
+           xs <- many varch
+           -- elem ([x] ++ xs) keywords
            return (x:xs)
 
 -- parser for natural numbers
