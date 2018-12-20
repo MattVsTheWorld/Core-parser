@@ -1,12 +1,10 @@
 module FileReader where
 
--- MISSING :
-    -- Definition of ParseProg
-    -- Definition of Program Name
-{-
 import System.IO
 import Parser
---import ParseProg
+import Expr
+import Parser_Utils
+
 
 readF :: IO String
 readF = do inh <- openFile "input.txt" ReadMode
@@ -21,7 +19,7 @@ main = do inp <- readF
 comp :: [(Program Name, Name)] -> Program Name
 comp []         = error "no parse"
 comp [(e,[])]   = e
-comp [(_,a)]    = error ("Doesn't use all input" ++ a)
+comp [(_,a)]    = error ("Doesn't use all input : " ++ a)
 
 readloop inh = do ineof <- hIsEOF inh
                   if ineof
@@ -31,4 +29,3 @@ readloop inh = do ineof <- hIsEOF inh
                         xs <- readloop inh
                         return (x++xs)
 
-- }

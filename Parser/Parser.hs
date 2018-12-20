@@ -11,8 +11,10 @@ IMPORTANT NOTES:
 - Only works with integer numbers so far
 - atomic expression treatment of (expr) needs checking
   -- In particular, things like "True" ? how to handle?
+      -- Should be Pack{1,0}. OR modify grammar.
   -- missing application / binops
   -- identifier should discriminate with keywords
+  -- maybe there should be some choices? (see parseProg)
 -}
 -- now calls ident which considers '_'
 {-
@@ -124,7 +126,7 @@ parseExpr = do symbol "let"
               -- ELam [a] (Expr a)
               -- \ var1_n . expr
               -- \ ((spazio)) vars . ((== ->)) espressione
-            do symbol "\\ "
+            do symbol "\\"
                vs <- some identifier
                character '.'
                e <- parseExpr
@@ -147,7 +149,7 @@ parseAlt = do character '<'
 -- lambda
 
 -- TEST
-test_prog = "f = 3; g x y = let z = x in z; h x = case (let y = x in y) of  <1> -> 2 <2> -> 5"
+-- test_prog = "f = 3; g x y = let z = x in z; h x = case (let y = x in y) of  <1> -> 2 <2> -> 5"
 
 {- to define
 parseVar :: Parser ( ?? )         DONE
