@@ -17,6 +17,10 @@ IMPORTANT NOTES:
   -- identifier should discriminate with keywords
   -- maybe there should be some choices? (see parseProg)
   -- are we using empty at all? Am I retarded?
+  -- IMP - check for parenthesised expressions
+  -- IMP - negate function (pg 17)
+  -- IMP - other notes on the book ~~38~~
+  -- (@) - inefficient infix? ~~39~~
 -}
 
 -- ESEMPI
@@ -89,14 +93,7 @@ parseAExpr = do v <- identifier
 parseExpr :: Parser (Expr Name)
             -- function application
             -- needs precedence
-parseExpr = {- Nope
-                do (e:es)  <- some parseAExpr
-               return (EAp () ())
-               <|>
-               -}
-            -- let
-            -- ELet IsRec [Def a] (Expr a)
-            do symbol "let" 
+parseExpr = do symbol "let" 
                defns <- some parseDef
                symbol "in"
                body <- parseExpr
@@ -121,7 +118,7 @@ parseExpr = {- Nope
               -- ELam [a] (Expr a)
               -- \ var1_n . expr
               -- \ ((spazio)) vars . ((== ->)) espressione
-            do symbol "\\"
+            do character '\\'
                vs <- some identifier
                character '.'
                e <- parseExpr
@@ -132,13 +129,17 @@ parseExpr = {- Nope
               -- ==== expr1 ***
             --parseExpr1 --
 
+
+-- La cosa degli EAp e' uscita un po' strana
+-- Currying? ##
+   
 {-
 -- ***
 -- expr1 -> expr2 || expr1 | expr2
 -- OR 
 -- associativity = right
 parseExpr1 :: Parser (Expr Name) 
-parseExpr1 = do e2 <- parseExpr2 -- ma non e' il tipo giusto!!
+parseExpr1 = do e2 <- parseExpr2 
                 character '|'
                 e1 <- parseExpr1
                 return (e1 ++ " | " ++ e2)
@@ -155,63 +156,87 @@ parseExpr2 = do e3 <- parseExpr3
                 return (e3 ++ " & " ++ e2)
                <|> 
                 parseExpr3
+-}
 
 -- expr3 -> expr4 relop expr4 | expr 4
 -- associativity = none
 -- RELOP
 -- relop = [< | <= | == | ~= | >= | >]
+relop :: [String]
 relop = ["<","<=","==","~=",">=",">"]
+
 parseExpr3 :: Parser (Expr Name)
 parseExpr3 = do el <- parseExpr4
-                rel <- symbol any relop -- NICE TRY LUL
+                rel <- symbol "<" -- || symbol ">"
                 er <- parseExpr4
-                return (el ++ " " ++ rel ++ " " ++ er)
+                return (EAp (EVar ('(':rel ++ ")")) (EAp (el) (er)))
+                return (EAp (EAp (EVar ('(':rel ++ ")")) (el)) (er))
                <|> 
                 parseExpr4 
 
 
 -- expr4 -> expr5 + exp4 | expr5 - expr5 | expr5
--- ADDITION, DIFFERENCE
--- associativity = right, none
+-- associativity = right (+), none (-)
+-- right associativity == 2+3+4 = 2+(3+4) (parenthesis omission)
+-- NO associativity == 3-4-3 ILLEGAL
+-- BIG WARNING e.g. "5-3-2" ##
+-- something with number parsing and spacing
 parseExpr4 :: Parser (Expr Name)
 parseExpr4 = do e5 <- parseExpr5
-                character '+'
+                c <- character '+'
                 e4 <- parseExpr4
-                return (e5 ++ " + " ++ e4)
+                --return (EAp (EVar ('(':c:")")) (EAp (e5) (e4)))
+                return (EAp (EAp (EVar "(+)") (e5)) (e4))
                <|>
+             do  
                 el <- parseExpr5
                 character '-'
                 er <- parseExpr5
-                return (el ++ " - " ++ er)
+                return (EAp (EAp (EVar "(-)") (el)) (er)) --Needs changing##
                <|>
+             do
                 parseExpr5
 
 
+     
 -- expr5 -> expr6 * expr5 | expr6 / expr6 | expr6
 -- MULTIPLICATION, DIVISION
 -- associativity = right, none
+
+-- :THINKING:
 parseExpr5 :: Parser (Expr Name)
 parseExpr5 = do e6 <- parseExpr6
                 character '*'
                 e5 <- parseExpr5
-                return (e6 ++ " * " ++ e5)
+                return (EAp (EAp (EVar "(*)") (e6)) (e5))
                <|>
-                el <- parseExpr6
+             do el <- parseExpr6
                 character '/'
                 er <- parseExpr6
-                return (el ++ " / " ++ er)
+                return (EAp (EAp (EVar "(/)") (el)) (er))
                <|>
                 parseExpr6
+          
 -- expr6 -> aexpr_1... aepxr_n (n>=1)
 -- associativity = left
 -- APPLICATION
 -- in pratica ritorna una lista di Expr Names
 -- problema peculiare... 
 -- se e' una, e' atomica (application to nothing? mmh), else e' un'applicazione
+--  2+3+4 = 2+(3+4)
+-- left = 2+3+4 -> (2+3) + 4
+-- double concat banana = (double concat) banana
+
 parseExpr6 :: Parser (Expr Name)
-parseExpr6 = do es <- some parseAExpr
-                return es
--}
+parseExpr6 = do es <- some parseAExpr               
+                -- ora ho una lista di Expr Name
+                -- se e' uno voglio dire ok, e' atomico
+                -- altrimenti recursive
+                return (mk_ap_chain es)
+                where 
+                  mk_ap_chain :: [(Expr Name)] -> (Expr Name)
+                  mk_ap_chain (x:xs) = foldl EAp (x) (xs)
+                  
 
 {-
 -- AExpr -> var | num | Pack{num,num} | (expr)
@@ -232,20 +257,6 @@ parseAExpr = do v <- identifier
              -- ( expr ) 
           
 -}
-
-
---[+ - * /    < <= == ~= >=      & | ]
--- POTENTIALLY VERY USELESS
--- turns out it was useless
-{-
-type Binop a = Name 
-parseBin :: Parser Binop
-              -- arithop
-parseBin = do a <- character '+'
--}
-              -- relop
-              -- boolop
-
 -- TEST
 -- test_prog = "f = 3; g x y = let z = x in z; h x = case (let y = x in y) of  <1> -> 2 <2> -> 5"
 

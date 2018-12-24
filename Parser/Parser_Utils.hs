@@ -87,7 +87,8 @@ string (x:xs) = do char x
 -- Added _ as a legal character for identifiers
 -- added illegality of keywords ?? ## NOT DOne 
 -- let/letrec _ in _ || case _ of _ || lambda || function composition?
---keywords = ["let","letrec","in","case","of"{-,"\\","."-}]
+-- keywords :: [String]
+-- keywords = ["let","letrec","in","case","of"{- ,Pack,"\\","."-}]
 
 ident :: Parser String 
 ident = do x  <- lower
@@ -186,7 +187,7 @@ factor = do symbol "("
 
 
 -- evaluation of an expression ###
--- NEEDED ???
+-- NOT NEEDED
 eval :: String -> Int
 eval xs = case (parse expr xs) of
             [(n,[])]  -> n
