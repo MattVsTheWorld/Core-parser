@@ -86,14 +86,14 @@ string (x:xs) = do char x
 -- lowercase letter followed by 0 or more (many) alphanum
 -- Added _ as a legal character for identifiers
 -- added illegality of keywords ?? ## NOT DOne 
--- let/letrec _ in _ || case _ of _ || lambda || function composition?
--- keywords :: [String]
--- keywords = ["let","letrec","in","case","of"{- ,Pack,"\\","."-}]
+keywords :: [String]
+keywords = ["let","letrec","in","case","of"{- ,Pack-}]
 
 ident :: Parser String 
-ident = do x  <- lower
+ident = do x  <- lower -- debatable point
            xs <- many varch
            -- elem ([x] ++ xs) keywords
+           -- return []
            return (x:xs)
 
 -- parser for natural numbers
