@@ -78,23 +78,40 @@ char x = sat (== x)
 -- recursively parse charactgers of a non-empty string
 string :: String -> Parser String
 string [] = return []
-string (x:xs) = do char x
+string (x:xs) = -- char x >>= string xs >>= return (x:xs)
+                char x    >> --  x >> y = x >>= \_ -> y  
+                string xs >>
+                return (x:xs)
+                
+                {-do char x
                    string xs
                    return (x:xs)
+                -}
 
 -- Parser for identifier (var name)
 -- lowercase letter followed by 0 or more (many) alphanum
 -- Added _ as a legal character for identifiers
--- added illegality of keywords ?? ## NOT DOne 
+-- added illegality of keywords ??
 keywords :: [String]
 keywords = ["let","letrec","in","case","of"{- ,Pack-}]
 
+isKey :: String -> Parser String
+isKey xs = if all (/=xs) keywords 
+           then return xs 
+           else empty
+
 ident :: Parser String 
-ident = do x  <- lower -- debatable point
+ident = lower         >>= \x  ->
+        many varch    >>= \xs ->
+        isKey  (x:xs) >>
+        return (x:xs)
+        {- do x  <- lower -- debatable point
            xs <- many varch
+           return (x:xs)
+        -}
            -- elem ([x] ++ xs) keywords
            -- return []
-           return (x:xs)
+           
 
 -- parser for natural numbers
 nat :: Parser Int

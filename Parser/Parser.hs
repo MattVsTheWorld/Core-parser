@@ -12,10 +12,10 @@ IMPORTANT NOTES:
 - atomic expression treatment of (expr) needs checking
   -- In particular, things like "True" ? how to handle?
       -- Should be Pack{1,0}. OR modify grammar.
-  -- missing application / binops
+  -- missing application / binops   KINDA DONE
   -- identifier should discriminate with keywords
   -- maybe there should be some choices? (see parseProg)
-  -- are we using empty at all? Am I retarded?
+  -- are we using empty at all? ? Yes! Done
   -- IMP - check for parenthesised expressions (SHOULD BE DONE)
   -- IMP - negate function (pg 17)
   -- IMP - other notes on the book ~~38~~
@@ -132,7 +132,7 @@ parseExpr1 :: Parser (Expr Name)
 parseExpr1 = do e2 <- parseExpr2 
                 character '|'
                 e1 <- parseExpr1
-                return (EAp (EAp (EVar "(|)") (e2)) (e1))
+                return (EAp (EAp (EVar "|") (e2)) (e1))
                <|> 
                 parseExpr2 -- ## laborious reparsing!
 
@@ -143,7 +143,7 @@ parseExpr2 :: Parser (Expr Name)
 parseExpr2 = do e3 <- parseExpr3
                 character '&'
                 e2 <- parseExpr2
-                return (EAp (EAp (EVar "(&)") (e3)) (e2))
+                return (EAp (EAp (EVar "&") (e3)) (e2))
                <|> 
                 parseExpr3
 
@@ -154,15 +154,34 @@ parseExpr2 = do e3 <- parseExpr3
 -- relop = [< | <= | == | ~= | >= | >]
 relop :: [String]
 relop = ["<","<=","==","~=",">=",">"]
+ 
+{- M E H -}
+findRelop :: String -> Parser String
+findRelop rel = do xs <- symbol rel
+                   if any (==xs) relop 
+                   then return xs 
+                   else empty
 
 parseExpr3 :: Parser (Expr Name)
-parseExpr3 = do el <- parseExpr4
+parseExpr3 = (<|>)
+             -- choice 1
+             (parseExpr4   >>= \el  ->
+             findRelop ">" >>= \rel ->
+             parseExpr4    >>= \er  ->
+             return (EAp (EAp (EVar rel) (el)) (er)))
+             -- choice 2
+             (parseExpr4)
+            
+            {-
+             do el <- parseExpr4
                 rel <- symbol "<" -- || symbol ">"
                 er <- parseExpr4
-                return (EAp (EVar ('(':rel ++ ")")) (EAp (el) (er)))
-                return (EAp (EAp (EVar ('(':rel ++ ")")) (el)) (er))
+                --return (EAp (EVar rel) (EAp (el) (er))) -- am I drunk??
+                return (EAp (EAp (EVar rel) (el)) (er))
                <|> 
                 parseExpr4 
+                -}
+                
 
 
 -- expr4 -> expr5 + exp4 | expr5 - expr5 | expr5
@@ -176,15 +195,13 @@ parseExpr4 = do e5 <- parseExpr5
                 character '+'
                 e4 <- parseExpr4
                 --return (EAp (EVar ('(':c:")")) (EAp (e5) (e4)))
-                return (EAp (EAp (EVar "(+)") (e5)) (e4))
+                return (EAp (EAp (EVar "+") (e5)) (e4))
                <|>
-             do  
-                el <- parseExpr5
+             do el <- parseExpr5
                 character '-'
                 er <- parseExpr5
-                return (EAp (EAp (EVar "(-)") (el)) (er)) --Needs changing##
+                return (EAp (EAp (EVar "-") (el)) (er)) --Needs changing##
                <|>
-             do
                 parseExpr5
 
 
@@ -198,12 +215,12 @@ parseExpr5 :: Parser (Expr Name)
 parseExpr5 = do e6 <- parseExpr6
                 character '*'
                 e5 <- parseExpr5
-                return (EAp (EAp (EVar "(*)") (e6)) (e5))
+                return (EAp (EAp (EVar "*") (e6)) (e5))
                <|>
              do el <- parseExpr6
                 character '/'
                 er <- parseExpr6
-                return (EAp (EAp (EVar "(/)") (el)) (er))
+                return (EAp (EAp (EVar "/") (el)) (er))
                <|>
                 parseExpr6
           
@@ -217,7 +234,7 @@ parseExpr6 = do es <- some parseAExpr
                 where 
                   -- as we have a list
                   ap_chain :: [(Expr Name)] -> (Expr Name)
-                  ap_chain (x:xs) = foldl EAp (x) (xs)
+                  ap_chain (x:xs) = foldl EAp x xs
                   
 -- TEST
 test_prog = "f = 3; g x y = let z = x in z; h x = case (let y = x in y) of  <1> -> 2 <2> -> 5"
