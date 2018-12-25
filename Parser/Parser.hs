@@ -99,7 +99,7 @@ parseExpr = do symbol "let"
                return (ELet NonRecursive defns body)
               <|>
               -- letrec
-            do symbol "letrec" -- BAD SOLUTION
+            do symbol "letrec" -- BAD SOLUTION ?
                defns <- some parseDef
                symbol "in"
                body <- parseExpr
@@ -128,6 +128,7 @@ parseExpr = do symbol "let"
 -- expr1 -> expr2 || expr1 | expr2
 -- OR 
 -- associativity = right
+{-
 parseExpr1 :: Parser (Expr Name) 
 parseExpr1 = do e2 <- parseExpr2 
                 character '|'
@@ -135,6 +136,32 @@ parseExpr1 = do e2 <- parseExpr2
                 return (EAp (EAp (EVar "|") (e2)) (e1))
                <|> 
                 parseExpr2 -- ## laborious reparsing!
+-}
+
+data PartialExpr = NoOp | FoundOp Name (Expr Name)
+
+assembleOp :: (Expr Name) -> PartialExpr -> (Expr Name)
+assembleOp e1 NoOp = e1
+assembleOp e1 (FoundOp op e2) = EAp (EAp (EVar op) e1) e2
+
+-- expr1 -> expr2 expr1c
+-- expr1c -> | expr1 <|> (e)
+
+parseExpr1 :: Parser (Expr Name) 
+parseExpr1 = parseExpr2 >>= \e2 ->
+             parseExpr1c >>= \e1 -> 
+             return (assembleOp e2 e1)
+             {-
+             do e2 <- parseExpr2 
+                assembleOp e2 parseExpr1c
+                -}
+
+parseExpr1c :: Parser PartialExpr
+parseExpr1c = do c <- symbol "|"
+                 e1 <- parseExpr1
+                 return (FoundOp c e1)
+                 <|>
+                 empty
 
 -- expr2 -> expr3 & expr2 | expr3
 -- AND
@@ -156,20 +183,59 @@ relop :: [String]
 relop = ["<","<=","==","~=",">=",">"]
  
 {- M E H -}
-findRelop :: String -> Parser String
-findRelop rel = do xs <- symbol rel
-                   if any (==xs) relop 
-                   then return xs 
-                   else empty
 
+{-
+findRelop :: Parser String
+findRelop = (symbol ">" >>= \xs -> return xs) 
+            <|>
+            (symbol "<" >>= \xs -> return xs)
+            
+            {-
+             do xs <- symbol ">"
+               return xs
+              <|>
+            do xs <- symbol "<"
+               return xs
+   
+            -}
+-}        
+
+
+-- TERRIBLE solution!
 parseExpr3 :: Parser (Expr Name)
-parseExpr3 = (<|>)
-             -- choice 1
+parseExpr3 = 
              (parseExpr4   >>= \el  ->
-             findRelop ">" >>= \rel ->
+             symbol ">"    >>= \rel ->
              parseExpr4    >>= \er  ->
              return (EAp (EAp (EVar rel) (el)) (er)))
-             -- choice 2
+             {-
+             <|> --THIS ONE'S A PICKLE
+             (parseExpr4   >>= \el  ->
+             symbol "<"    >>= \rel ->
+             parseExpr4    >>= \er  ->
+             return (EAp (EAp (EVar rel) (el)) (er)))
+             <|>
+             (parseExpr4   >>= \el  ->
+             symbol "<="   >>= \rel ->
+             parseExpr4    >>= \er  ->
+             return (EAp (EAp (EVar rel) (el)) (er)))
+             <|>
+             (parseExpr4   >>= \el  ->
+             symbol ">="   >>= \rel ->
+             parseExpr4    >>= \er  ->
+             return (EAp (EAp (EVar rel) (el)) (er)))
+             <|>
+             (parseExpr4   >>= \el  ->
+             symbol "=="   >>= \rel ->
+             parseExpr4    >>= \er  ->
+             return (EAp (EAp (EVar rel) (el)) (er)))
+             <|>
+             (parseExpr4   >>= \el  ->
+             symbol "~="   >>= \rel ->
+             parseExpr4    >>= \er  ->
+             return (EAp (EAp (EVar rel) (el)) (er)))
+             -}
+             <|>
              (parseExpr4)
             
             {-
@@ -238,8 +304,15 @@ parseExpr6 = do es <- some parseAExpr
                   
 -- TEST
 test_prog = "f = 3; g x y = let z = x in z; h x = case (let y = x in y) of  <1> -> 2 <2> -> 5"
-
-{- to define
+test_prog2 = "f x y = case x of <1> -> case y of <1> -> 1 <2> -> 2"
+-- Dangling else
+{- http://www.mathcs.emory.edu/~cheung/Courses/561/Syllabus/2-C/dangling-else.html
+f x y = case x of
+        1 -> case y of
+             1 -> 1
+        2 -> 2
+-}
+{- to define 
 parseVar :: Parser ( ?? )         DONE
 parseExpr :: Parser (Expr Name)   IN THE MAKING
 parseAExpr :: Parser (Expr Name)  KINDA DONE
