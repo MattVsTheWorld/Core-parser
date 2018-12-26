@@ -74,6 +74,12 @@ alphanum = sat isAlphaNum
 char :: Char -> Parser Char
 char x = sat (== x)
 
+choice :: Parser Int
+choice = char '<' >>
+         int  >>= \n ->
+         char '>' >>
+         return n
+
 -- Empty string can always be parsed
 -- recursively parse characters of a non-empty string
 string :: String -> Parser String
@@ -164,6 +170,8 @@ natural = token nat
 integer :: Parser Int
 integer = token int
 
+choiceS :: Parser Int
+choiceS = token choice
 
 symbol :: String -> Parser String
 symbol xs = token (string xs)

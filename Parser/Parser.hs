@@ -71,9 +71,7 @@ parseConstr = do symbol "Pack"
 -- <num> var1_n -> expr
 -- Alter a = (Int, [a], Expr a)
 parseAlt :: Parser (Alter Name)
-parseAlt = do character '<'
-              n <- integer
-              character '>'
+parseAlt = do n <- choiceS
               vs <- many identifier
               symbol "->"
               e <- parseExpr
@@ -188,6 +186,14 @@ findRelop :: Parser String
 findRelop = (symbol ">" >>= \xs -> return xs) 
             <|>
             (symbol "<" >>= \xs -> return xs)
+            <|>
+            (symbol "<=" >>= \xs -> return xs)
+            <|>
+            (symbol ">=" >>= \xs -> return xs)
+            <|>
+            (symbol "==" >>= \xs -> return xs)
+            <|>
+            (symbol "~=" >>= \xs -> return xs)
             
             {-
              do xs <- symbol ">"
@@ -203,7 +209,7 @@ findRelop = (symbol ">" >>= \xs -> return xs)
 -- TERRIBLE solution!
 parseExpr3 :: Parser (Expr Name)
 parseExpr3 = do e4 <- parseExpr4
-                do rel <- symbol ">"
+                do rel <- findRelop
                    er  <- parseExpr4
                    return (EAp (EAp (EVar rel) e4) er)
                   <|>
@@ -213,35 +219,6 @@ parseExpr3 = do e4 <- parseExpr4
              symbol ">"    >>= \rel ->
              parseExpr4    >>= \er  ->
              return (EAp (EAp (EVar rel) (el)) (er)))  
-           
-             <|> --THIS ONE'S A PICKLE
-             (parseExpr4   >>= \el  ->
-             symbol "<"    >>= \rel ->
-             parseExpr4    >>= \er  ->
-             return (EAp (EAp (EVar rel) (el)) (er)))
-              <|>
-             (parseExpr4   >>= \el  ->
-             symbol "<="   >>= \rel ->
-             parseExpr4    >>= \er  ->
-             return (EAp (EAp (EVar rel) (el)) (er)))
-             <|>
-             (parseExpr4   >>= \el  ->
-             symbol ">="   >>= \rel ->
-             parseExpr4    >>= \er  ->
-             return (EAp (EAp (EVar rel) (el)) (er)))
-             <|>
-             (parseExpr4   >>= \el  ->
-             symbol "=="   >>= \rel ->
-             parseExpr4    >>= \er  ->
-             return (EAp (EAp (EVar rel) (el)) (er)))
-             <|>
-             (parseExpr4   >>= \el  ->
-             symbol "~="   >>= \rel ->
-             parseExpr4    >>= \er  ->
-             return (EAp (EAp (EVar rel) (el)) (er)))
-           
-             <|>
-             (parseExpr4)
               -}
             {-
              do el <- parseExpr4
@@ -324,11 +301,12 @@ test_prog = "f = 3; g x y = let z = x in z; h x = case (let y = x in y) of  <1> 
 test_prog2 = "f x y = case x of <1> -> case y of <1> -> 1 <2> -> 2"
 -- Dangling else
 {- http://www.mathcs.emory.edu/~cheung/Courses/561/Syllabus/2-C/dangling-else.html
+-}
 f x y = case x of
         1 -> case y of
              1 -> 1
         2 -> 2
--}
+
 {- to define 
 parseVar :: Parser ( ?? )         DONE
 parseExpr :: Parser (Expr Name)   IN THE MAKING
