@@ -71,7 +71,9 @@ parseConstr = do symbol "Pack"
 -- <num> var1_n -> expr
 -- Alter a = (Int, [a], Expr a)
 parseAlt :: Parser (Alter Name)
-parseAlt = do n <- choiceS
+parseAlt = do character '<' 
+              n <- integer
+              character '>'
               vs <- many identifier
               symbol "->"
               e <- parseExpr
