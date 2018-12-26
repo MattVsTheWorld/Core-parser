@@ -19,10 +19,15 @@ IMPORTANT NOTES:
   -- IMP - negate function (pg 17)
   -- IMP - other notes on the book ~~38~~
   -- (@) - inefficient infix? ~~39~~
-  -- IMP!!! - Bad handling of subtraction
+  -- IMP!!! - la cosa del "-3" =/= "- 3"
+  
+  -- MEDIUM
+  -- Many some; performance problems?
 
   -- MINOR
   -- ignore comments (1.9)
+  -- numbering ?
+
 -}
 
 -- ESEMPI
@@ -31,7 +36,8 @@ parseProg = do p <- parseScDef
                do character ';'
                   ps <- parseProg
                   return (p:ps)
-                 <|> return [p]
+                 <|> 
+                  return [p]
 {-
 Supercombinator = definizione di funzione
 banana   x   xs     =       x + xs
@@ -95,12 +101,19 @@ parseAExpr = do v <- identifier
 parseExpr :: Parser (Expr Name)
             -- function application
             -- needs precedence
-parseExpr = do symbol "let" 
-               defns <- some parseDef
-               symbol "in"
-               body <- parseExpr
-               return (ELet NonRecursive defns body)
+parseExpr = do symbol "let"
+               do symbol "rec"
+                  defns <- some parseDef
+                  symbol "in"
+                  body <- parseExpr
+                  return (ELet Recursive defns body)
+                 <|>
+                  do defns <- some parseDef
+                     symbol "in"
+                     body <- parseExpr
+                     return (ELet NonRecursive defns body)
               <|>
+            {-  
               -- letrec
             do symbol "letrec" -- BAD SOLUTION ?
                defns <- some parseDef
@@ -108,6 +121,7 @@ parseExpr = do symbol "let"
                body <- parseExpr
                return (ELet Recursive defns body)
               <|>
+              -}
               -- case expr of alts
               -- ECase (Expr a) [Alter a]          
             do symbol "case"
