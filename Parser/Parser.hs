@@ -15,11 +15,14 @@ IMPORTANT NOTES:
   -- missing application / binops   KINDA DONE
   -- identifier should discriminate with keywords
   -- maybe there should be some choices? (see parseProg)
-  -- are we using empty at all? ? Yes! Done
   -- IMP - check for parenthesised expressions (SHOULD BE DONE)
   -- IMP - negate function (pg 17)
   -- IMP - other notes on the book ~~38~~
   -- (@) - inefficient infix? ~~39~~
+  -- IMP!!! - Bad handling of subtraction
+
+  -- MINOR
+  -- ignore comments (1.9)
 -}
 
 -- ESEMPI
@@ -135,45 +138,28 @@ parseExpr1 = do e2 <- parseExpr2
                 e1 <- parseExpr1
                 return (EAp (EAp (EVar "|") (e2)) (e1))
                <|> 
-                parseExpr2 -- ## laborious reparsing!
+                parseExpr2 -- ## laborious reparsing! Fixed!
 -}
 
-data PartialExpr = NoOp | FoundOp Name (Expr Name)
-
-assembleOp :: (Expr Name) -> PartialExpr -> (Expr Name)
-assembleOp e1 NoOp = e1
-assembleOp e1 (FoundOp op e2) = EAp (EAp (EVar op) e1) e2
-
--- expr1 -> expr2 expr1c
--- expr1c -> | expr1 <|> (e)
-
 parseExpr1 :: Parser (Expr Name) 
-parseExpr1 = parseExpr2 >>= \e2 ->
-             parseExpr1c >>= \e1 -> 
-             return (assembleOp e2 e1)
-             {-
-             do e2 <- parseExpr2 
-                assembleOp e2 parseExpr1c
-                -}
-
-parseExpr1c :: Parser PartialExpr
-parseExpr1c = do c <- symbol "|"
-                 e1 <- parseExpr1
-                 return (FoundOp c e1)
-                 <|>
-                 empty
-
+parseExpr1 = do e2 <- parseExpr2 
+                do c  <- character '|'
+                   e1 <- parseExpr1
+                   return (EAp (EAp (EVar "|") (e2)) (e1))
+                  <|> 
+                   return e2 
+                
 -- expr2 -> expr3 & expr2 | expr3
 -- AND
 -- associativity = right
 parseExpr2 :: Parser (Expr Name)
 parseExpr2 = do e3 <- parseExpr3
-                character '&'
-                e2 <- parseExpr2
-                return (EAp (EAp (EVar "&") (e3)) (e2))
-               <|> 
-                parseExpr3
-
+                do character '&'
+                   e2 <- parseExpr2
+                   return (EAp (EAp (EVar "&") (e3)) (e2))
+                  <|> 
+                   return e3
+                   
 
 -- expr3 -> expr4 relop expr4 | expr 4
 -- associativity = none
@@ -184,7 +170,7 @@ relop = ["<","<=","==","~=",">=",">"]
  
 {- M E H -}
 
-{-
+
 findRelop :: Parser String
 findRelop = (symbol ">" >>= \xs -> return xs) 
             <|>
@@ -198,7 +184,7 @@ findRelop = (symbol ">" >>= \xs -> return xs)
                return xs
    
             -}
--}        
+       
 
 
 -- TERRIBLE solution!
@@ -207,14 +193,14 @@ parseExpr3 =
              (parseExpr4   >>= \el  ->
              symbol ">"    >>= \rel ->
              parseExpr4    >>= \er  ->
-             return (EAp (EAp (EVar rel) (el)) (er)))
+             return (EAp (EAp (EVar rel) (el)) (er)))  
              {-
              <|> --THIS ONE'S A PICKLE
              (parseExpr4   >>= \el  ->
              symbol "<"    >>= \rel ->
              parseExpr4    >>= \er  ->
              return (EAp (EAp (EVar rel) (el)) (er)))
-             <|>
+              <|>
              (parseExpr4   >>= \el  ->
              symbol "<="   >>= \rel ->
              parseExpr4    >>= \er  ->
@@ -256,6 +242,7 @@ parseExpr3 =
 -- NO associativity == 3-4-3 ILLEGAL
 -- BIG WARNING e.g. "5-3-2" ##
 -- something with number parsing and spacing
+{-
 parseExpr4 :: Parser (Expr Name)
 parseExpr4 = do e5 <- parseExpr5
                 character '+'
@@ -264,12 +251,25 @@ parseExpr4 = do e5 <- parseExpr5
                 return (EAp (EAp (EVar "+") (e5)) (e4))
                <|>
              do el <- parseExpr5
-                character '-'
-                er <- parseExpr5
-                return (EAp (EAp (EVar "-") (el)) (er)) --Needs changing##
-               <|>
-                parseExpr5
+                do character '-'
+                   er <- parseExpr5
+                   return (EAp (EAp (EVar "-") (el)) (er)) --Needs changing##
+                  <|>
+                   return el
+-}
 
+parseExpr4 :: Parser (Expr Name)
+parseExpr4 = do e5 <- parseExpr5
+                do character '+'
+                   e4 <- parseExpr4
+                   --return (EAp (EVar ('(':c:")")) (EAp (e5) (e4)))
+                   return (EAp (EAp (EVar "+") (e5)) (e4))
+                  <|>
+                   do character '-'
+                      er <- parseExpr5
+                      return (EAp (EAp (EVar "-") (e5)) (er)) --Needs changing##
+                  <|>
+                   return e5
 
      
 -- expr5 -> expr6 * expr5 | expr6 / expr6 | expr6
@@ -279,17 +279,15 @@ parseExpr4 = do e5 <- parseExpr5
 -- :THINKING:
 parseExpr5 :: Parser (Expr Name)
 parseExpr5 = do e6 <- parseExpr6
-                character '*'
-                e5 <- parseExpr5
-                return (EAp (EAp (EVar "*") (e6)) (e5))
-               <|>
-             do el <- parseExpr6
-                character '/'
-                er <- parseExpr6
-                return (EAp (EAp (EVar "/") (el)) (er))
-               <|>
-                parseExpr6
-          
+                do character '*'
+                   e5 <- parseExpr5
+                   return (EAp (EAp (EVar "*") (e6)) (e5))
+                  <|>
+                   do character '/'
+                      er <- parseExpr6
+                      return (EAp (EAp (EVar "/") (e6)) (er))
+                  <|>
+                   return e6          
 -- expr6 -> aexpr_1... aepxr_n (n>=1)
 -- associativity = left
 -- double concat banana = (double concat) banana

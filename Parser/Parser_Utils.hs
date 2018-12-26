@@ -45,21 +45,21 @@ instance Alternative Parser where
 
 -- verifies a predicate, return a Parser Char
 sat :: (Char -> Bool) -> Parser Char
-sat p = do x <- item
-           if p x then return x else empty
+sat p = item >>= \x ->
+        if p x then return x else empty
 
 digit :: Parser Char
 digit = sat isDigit
 
 lower :: Parser Char
 lower = sat isLower
-
+{-
 upper :: Parser Char
 upper = sat isUpper
 
 letter :: Parser Char
 letter = sat isAlpha
-
+-}
 -- small variation on isAlphanum to include the '_' character
 isVarch :: Char -> Bool
 isVarch c = isAlphaNum c || ( c == '_')
@@ -75,7 +75,7 @@ char :: Char -> Parser Char
 char x = sat (== x)
 
 -- Empty string can always be parsed
--- recursively parse charactgers of a non-empty string
+-- recursively parse characters of a non-empty string
 string :: String -> Parser String
 string [] = return []
 string (x:xs) = -- char x >>= string xs >>= return (x:xs)
@@ -119,6 +119,7 @@ nat = do xs <- some digit -- 1 or more digits
          return (read xs) -- read per trasformarlo in Int
 
 -- UNUSED : fractionals
+{-
 fract :: Parser Double
 fract = do x <- some digit
            character '.'
@@ -128,6 +129,7 @@ fract = do x <- some digit
 fractional :: Parser Double
 fractional = token fract
 -- /UNUSED : fractionals
+-}
 
 -- Parser to remove spaces comprising zero or more space/tab/newlines
 -- () dummy result value
@@ -171,6 +173,7 @@ character :: Char -> Parser Char
 character c = token (char c)
  
 -- Parse non empty list of natural numbers
+{-
 nats :: Parser [Int]
 nats = do symbol "["
           n <- natural
@@ -178,9 +181,9 @@ nats = do symbol "["
                          natural)
           symbol "]"
           return (n:ns)
-
+-}
 -- Arithmetic expressions
-
+{-
 expr :: Parser Int
 expr = do t <- term
           do symbol "+"
@@ -204,9 +207,10 @@ factor = do symbol "("
 
 
 -- evaluation of an expression ###
--- NOT NEEDED
+-- 
 eval :: String -> Int
 eval xs = case (parse expr xs) of
             [(n,[])]  -> n
             [(_,out)] -> error ("Unused input " ++ out)
             []        -> error "Invalid input"
+-}

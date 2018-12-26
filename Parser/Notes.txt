@@ -1,0 +1,26 @@
+------------------------------------------------------------
+Parsing steps
+------------------------------------------------------------
+1 - leggi dal file in una big String
+
+2 - lexical analysis
+clex :: String -> [Token]
+Prende il programma (considerabile una big string) e lo splitta in vary Token
+
+Token = String (== identifier, number, symbol, ...)
+
+3 - syntax analysis; consuma la lista di token e produce un coreProgram
+syntax :: [Token] -> CoreProgram
+------------------------------------------------------------
+
+------------------------------------------------------------
+Lexical Analysis
+------------------------------------------------------------
+type Token = String      -- A token is never empty
+
+1 - ignora gli spazi (space)
+2 - Riconosce numeri come singoli token (Integer)
+3 - recognize variables (begin with alphanum, continue with letter/digits/_)
+4 - If none apply, return a token with a single character
+5 - if input empty, return empty token list
+------------------------------------------------------------
