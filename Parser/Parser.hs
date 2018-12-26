@@ -13,12 +13,11 @@ IMPORTANT NOTES:
   -- In particular, things like "True" ? how to handle?
       -- Should be Pack{1,0}. OR modify grammar.
   -- missing application / binops   KINDA DONE
-  -- identifier should discriminate with keywords
-  -- maybe there should be some choices? (see parseProg)
+  -- identifier should discriminate with keywords (ok)
   -- IMP - check for parenthesised expressions (SHOULD BE DONE)
-  -- IMP - negate function (pg 17)
-  -- IMP - other notes on the book ~~38~~
-  -- (@) - inefficient infix? ~~39~~
+  -- IMP? - negate function (pg 17) (?)
+  -- IMP - other notes on the book ~~38~~ (Dangling else?)
+  -- (@) - inefficient infix? ~~39~~ FIXED
   -- IMP!!! - la cosa del "-3" =/= "- 3"
   
   -- MEDIUM
@@ -89,15 +88,26 @@ parseAExpr = do v <- identifier
                 return (ENum n)
                <|>
              do c <- parseConstr
-                return (c)
+                return c
                <|>
              do character '('
-                e <- parseExpr -- correct? mmmh
+                e <- parseExpr
                 character ')'
-                return (e)
+                return e
              -- ( expr ) 
 
 
+{- old letrec  
+-- letrec
+do symbol "letrec" -- BAD SOLUTION ?
+  defns <- some parseDef
+  symbol "in"
+  body <- parseExpr
+  return (ELet Recursive defns body)
+<|>
+-}
+-- case expr of alts
+-- ECase (Expr a) [Alter a]                  
 parseExpr :: Parser (Expr Name)
             -- function application
             -- needs precedence
@@ -112,18 +122,7 @@ parseExpr = do symbol "let"
                      symbol "in"
                      body <- parseExpr
                      return (ELet NonRecursive defns body)
-              <|>
-            {-  
-              -- letrec
-            do symbol "letrec" -- BAD SOLUTION ?
-               defns <- some parseDef
-               symbol "in"
-               body <- parseExpr
-               return (ELet Recursive defns body)
-              <|>
-              -}
-              -- case expr of alts
-              -- ECase (Expr a) [Alter a]          
+              <|>     
             do symbol "case"
                e <- parseExpr
                symbol "of"
@@ -203,12 +202,18 @@ findRelop = (symbol ">" >>= \xs -> return xs)
 
 -- TERRIBLE solution!
 parseExpr3 :: Parser (Expr Name)
-parseExpr3 = 
+parseExpr3 = do e4 <- parseExpr4
+                do rel <- symbol ">"
+                   er  <- parseExpr4
+                   return (EAp (EAp (EVar rel) e4) er)
+                  <|>
+                   return e4
+              {-
              (parseExpr4   >>= \el  ->
              symbol ">"    >>= \rel ->
              parseExpr4    >>= \er  ->
              return (EAp (EAp (EVar rel) (el)) (er)))  
-             {-
+           
              <|> --THIS ONE'S A PICKLE
              (parseExpr4   >>= \el  ->
              symbol "<"    >>= \rel ->
@@ -234,10 +239,10 @@ parseExpr3 =
              symbol "~="   >>= \rel ->
              parseExpr4    >>= \er  ->
              return (EAp (EAp (EVar rel) (el)) (er)))
-             -}
+           
              <|>
              (parseExpr4)
-            
+              -}
             {-
              do el <- parseExpr4
                 rel <- symbol "<" -- || symbol ">"
