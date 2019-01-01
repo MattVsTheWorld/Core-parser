@@ -185,9 +185,9 @@ relop = ["<","<=","==","~=",">=",">"]
 
 
 findRelop :: Parser String
-findRelop = (symbol " > " >>= \xs -> return xs) 
+findRelop = (symbol "> " >>= \xs -> return xs) 
             <|>
-            (symbol " < " >>= \xs -> return xs)
+            (symbol "< " >>= \xs -> return xs)
             <|>
             (symbol "<=" >>= \xs -> return xs)
             <|>
