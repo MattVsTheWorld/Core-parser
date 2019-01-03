@@ -6,19 +6,15 @@ import Parser_Utils
 import Control.Applicative
 import Data.Char
 
+
 {-
 IMPORTANT NOTES:
-- Only works with integer numbers so far
-- atomic expression treatment of (expr) needs checking
-  -- In particular, things like "True" ? how to handle?
-      -- Should be Pack{1,0}. OR modify grammar.
-  -- missing application / binops   KINDA DONE
-  -- identifier should discriminate with keywords (ok)
+  
   -- IMP - check for parenthesised expressions (SHOULD BE DONE)
   -- IMP? - negate function (pg 17) (?)
-  -- IMP - other notes on the book ~~38~~ (Dangling else?)
-  -- (@) - inefficient infix? ~~39~~ FIXED
+  -- Dangling else issue?
   -- IMP!!! - la cosa del "-3" =/= "- 3"
+  -- "> " vs ">"
   
   -- MEDIUM
   -- Many some; performance problems?
@@ -26,8 +22,14 @@ IMPORTANT NOTES:
   -- MINOR
   -- ignore comments (1.9)
   -- numbering ?
-
+SOLVDED:
+- Only works with integer numbers so far (ok)
+- atomic expression treatment of (expr) needs checking
+  -- In particular, things like "True" ? how to handle?
+      -- Should be Pack{1,0}. OR modify grammar.
+-- identifier should discriminate with keywords (ok)
 -}
+
 
 -- ESEMPI
 parseProg :: Parser (Program Name)
