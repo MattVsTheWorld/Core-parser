@@ -31,7 +31,6 @@ SOLVDED:
 -}
 
 
--- ESEMPI
 parseProg :: Parser (Program Name)
 parseProg = do p <- parseScDef
                do character ';'
@@ -39,21 +38,17 @@ parseProg = do p <- parseScDef
                   return (p:ps)
                  <|> 
                   return [p]
-{-
-Supercombinator = definizione di funzione
-banana   x   xs     =       x + xs
-  ^      ^   ^      ^       ^^^^^^
- Var    var var   char       expr
- Name      [a]               Expr a   
--}
+
+-- Supercombinator = definizione di funzione
 parseScDef :: Parser (ScDef Name)
 parseScDef = do v  <- identifier      -- = parseVar
                 pf <- many identifier -- 
                 character '='       -- throw away
-                body <- parseExpr   -- DEFINE
+                body <- parseExpr 
                 return (v, pf, body)
+
+
 -- Def -> var = expr
--- Needs a checkup
 parseDef :: Parser (Def Name)
 parseDef = do v <- identifier
               character '='
@@ -99,15 +94,6 @@ parseAExpr = do v <- identifier
              -- ( expr ) 
 
 
-{- old letrec  
--- letrec
-do symbol "letrec" -- BAD SOLUTION ?
-  defns <- some parseDef
-  symbol "in"
-  body <- parseExpr
-  return (ELet Recursive defns body)
-<|>
--}
 -- case expr of alts
 -- ECase (Expr a) [Alter a]                  
 parseExpr :: Parser (Expr Name)
@@ -131,10 +117,6 @@ parseExpr = do symbol "let"
                alts <- some parseAlt
                return (ECase e alts)
               <|>
-              -- lambda
-              -- ELam [a] (Expr a)
-              -- \ var1_n . expr
-              -- \ ((spazio)) vars . ((== ->)) espressione
             do character '\\'
                vs <- some identifier
                character '.'
@@ -146,16 +128,6 @@ parseExpr = do symbol "let"
 -- expr1 -> expr2 || expr1 | expr2
 -- OR 
 -- associativity = right
-{-
-parseExpr1 :: Parser (Expr Name) 
-parseExpr1 = do e2 <- parseExpr2 
-                character '|'
-                e1 <- parseExpr1
-                return (EAp (EAp (EVar "|") (e2)) (e1))
-               <|> 
-                parseExpr2 -- ## laborious reparsing! Fixed!
--}
-
 parseExpr1 :: Parser (Expr Name) 
 parseExpr1 = do e2 <- parseExpr2 
                 do c  <- character '|'
@@ -183,9 +155,7 @@ parseExpr2 = do e3 <- parseExpr3
 relop :: [String]
 relop = ["<","<=","==","~=",">=",">"]
  
-{- M E H -}
-
-
+-- Unsatisfactory solution...
 findRelop :: Parser String
 findRelop = (symbol "> " >>= \xs -> return xs) 
             <|>
@@ -197,8 +167,7 @@ findRelop = (symbol "> " >>= \xs -> return xs)
             <|>
             (symbol "==" >>= \xs -> return xs)
             <|>
-            (symbol "~=" >>= \xs -> return xs)
-            
+            (symbol "~=" >>= \xs -> return xs)           
             {-
              do xs <- symbol ">"
                return xs
@@ -210,7 +179,7 @@ findRelop = (symbol "> " >>= \xs -> return xs)
        
 
 
--- TERRIBLE solution!
+-- Bad solution!
 parseExpr3 :: Parser (Expr Name)
 parseExpr3 = do e4 <- parseExpr4
                 do rel <- findRelop
@@ -242,21 +211,6 @@ parseExpr3 = do e4 <- parseExpr4
 -- NO associativity == 3-4-3 ILLEGAL
 -- BIG WARNING e.g. "5-3-2" ##
 -- something with number parsing and spacing
-{-
-parseExpr4 :: Parser (Expr Name)
-parseExpr4 = do e5 <- parseExpr5
-                character '+'
-                e4 <- parseExpr4
-                --return (EAp (EVar ('(':c:")")) (EAp (e5) (e4)))
-                return (EAp (EAp (EVar "+") (e5)) (e4))
-               <|>
-             do el <- parseExpr5
-                do character '-'
-                   er <- parseExpr5
-                   return (EAp (EAp (EVar "-") (el)) (er)) --Needs changing##
-                  <|>
-                   return el
--}
 
 parseExpr4 :: Parser (Expr Name)
 parseExpr4 = do e5 <- parseExpr5
@@ -267,7 +221,7 @@ parseExpr4 = do e5 <- parseExpr5
                   <|>
                    do character '-'
                       er <- parseExpr5
-                      return (EAp (EAp (EVar "-") (e5)) (er)) --Needs changing##
+                      return (EAp (EAp (EVar "-") (e5)) (er)) -- issue
                   <|>
                    return e5
 
@@ -275,8 +229,6 @@ parseExpr4 = do e5 <- parseExpr5
 -- expr5 -> expr6 * expr5 | expr6 / expr6 | expr6
 -- MULTIPLICATION, DIVISION
 -- associativity = right, none
-
--- :THINKING:
 parseExpr5 :: Parser (Expr Name)
 parseExpr5 = do e6 <- parseExpr6
                 do character '*'
@@ -290,7 +242,7 @@ parseExpr5 = do e6 <- parseExpr6
                    return e6          
 -- expr6 -> aexpr_1... aepxr_n (n>=1)
 -- associativity = left
--- double concat banana = (double concat) banana
+-- double concat f = (double concat) f
 
 parseExpr6 :: Parser (Expr Name)
 parseExpr6 = do es <- some parseAExpr               
@@ -310,11 +262,3 @@ f x y = case x of
         1 -> case y of
              1 -> 1
         2 -> 2
-
-{- to define 
-parseVar :: Parser ( ?? )         DONE
-parseExpr :: Parser (Expr Name)   IN THE MAKING
-parseAExpr :: Parser (Expr Name)  KINDA DONE
-parseDef :: Parser (Def Name)     DONE
-parseAlt :: Parser (Alter Name)   DONE?
--}
