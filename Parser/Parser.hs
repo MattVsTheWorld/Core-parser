@@ -160,7 +160,7 @@ parseExpr2 = do e3 <- parseExpr3
 -- RELOP
 -- relop = [< | <= | == | ~= | >= | >]
 relop :: [String]
-relop = ["<","<=","==","~=",">=",">"]
+relop = ["< ","<=","==","~=",">=","> "]
  
 {-
 -- Unsatisfactory solution...
