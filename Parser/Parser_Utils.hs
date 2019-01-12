@@ -87,6 +87,10 @@ string (x:xs) = -- char x >>= string xs >>= return (x:xs)
                    string xs
                    return (x:xs)
                 -}
+strings :: [String] -> Parser String
+strings [] = return []
+strings (x:xs) = do string x
+                   <|> strings xs
 
 -- Parser for identifier (var name)
 -- lowercase letter followed by 0 or more (many) alphanum
@@ -95,15 +99,15 @@ string (x:xs) = -- char x >>= string xs >>= return (x:xs)
 keywords :: [String]
 keywords = ["let","letrec","in","case","of"{- ,Pack-}]
 
-isKey :: String -> Parser String
-isKey xs = if all (/=xs) keywords 
+isNotKey :: String -> Parser String
+isNotKey xs = if all (/=xs) keywords 
            then return xs 
            else empty
 
 ident :: Parser String 
 ident = lower         >>= \x  ->
         many varch    >>= \xs ->
-        isKey  (x:xs) >>
+        isNotKey  (x:xs) >>
         return (x:xs)
         {- do x  <- lower -- debatable point
            xs <- many varch

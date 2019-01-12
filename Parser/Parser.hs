@@ -53,12 +53,15 @@ parseDef :: Parser (Def Name)
 parseDef = do v <- identifier
               character '='
               body <- parseExpr
-              return (v, body) -- Def Name is a tuple
+              do character ';' 
+                 return (v, body) 
+                <|> return (v, body) -- SAME FOR ALT?
+                --return (v, body) -- Def Name is a tuple
 
 -- EConstr Int Int
 parseConstr :: Parser (Expr Name)
-parseConstr = do symbol "Pack"
-                 character '{'
+parseConstr = do symbol "Pack{"
+              --   character '{'
                  tag <- natural
                  character ','
                  arity <- natural
@@ -74,7 +77,9 @@ parseAlt = do character '<'
               vs <- many identifier
               symbol "->"
               e <- parseExpr
-              return (n,vs,e)
+              do character ';'
+                 return (n,vs,e)
+                <|> return (n,vs,e)
 
 -- AExpr -> var | num | Pack{num,num} | (expr)
 parseAExpr :: Parser (Expr Name)
@@ -99,6 +104,8 @@ parseAExpr = do v <- identifier
 parseExpr :: Parser (Expr Name)
             -- function application
             -- needs precedence
+
+            -- Scrivere funzioni separate
 parseExpr = do symbol "let"
                do symbol "rec"
                   defns <- some parseDef
@@ -155,9 +162,11 @@ parseExpr2 = do e3 <- parseExpr3
 relop :: [String]
 relop = ["<","<=","==","~=",">=",">"]
  
+{-
 -- Unsatisfactory solution...
 findRelop :: Parser String
-findRelop = (symbol "> " >>= \xs -> return xs) 
+findRelop = strings relop
+   (symbol "> " >>= \xs -> return xs) 
             <|>
             (symbol "< " >>= \xs -> return xs)
             <|>
@@ -167,7 +176,8 @@ findRelop = (symbol "> " >>= \xs -> return xs)
             <|>
             (symbol "==" >>= \xs -> return xs)
             <|>
-            (symbol "~=" >>= \xs -> return xs)           
+            (symbol "~=" >>= \xs -> return xs)  
+            -}         
             {-
              do xs <- symbol ">"
                return xs
@@ -182,7 +192,7 @@ findRelop = (symbol "> " >>= \xs -> return xs)
 -- Bad solution!
 parseExpr3 :: Parser (Expr Name)
 parseExpr3 = do e4 <- parseExpr4
-                do rel <- findRelop
+                do rel <- strings relop
                    er  <- parseExpr4
                    return (EAp (EAp (EVar rel) e4) er)
                   <|>
@@ -254,7 +264,7 @@ parseExpr6 = do es <- some parseAExpr
                   
 -- TEST
 test_prog = "f = 3; g x y = let z = x in z; h x = case (let y = x in y) of  <1> -> 2 <2> -> 5"
-test_prog2 = "f x y = case x of <1> -> case y of <1> -> 1 <2> -> 2"
+test_prog2 = "f x y = case x of <1> -> case y of <1> -> 1; <2> -> 2;"
 -- Dangling else
 {- http://www.mathcs.emory.edu/~cheung/Courses/561/Syllabus/2-C/dangling-else.html
 -}
