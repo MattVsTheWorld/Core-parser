@@ -39,11 +39,11 @@ parseProg = do p <- parseScDef
                  <|> 
                   return [p]
 
--- Supercombinator = definizione di funzione
+-- Supercombinator = function definition
 parseScDef :: Parser (ScDef Name)
 parseScDef = do v  <- identifier      -- = parseVar
-                pf <- many identifier -- 
-                character '='       -- throw away
+                pf <- many identifier 
+                character '='         -- throw away
                 body <- parseExpr 
                 return (v, pf, body)
 
@@ -55,8 +55,7 @@ parseDef = do v <- identifier
               body <- parseExpr
               do character ';' 
                  return (v, body) 
-                <|> return (v, body) -- SAME FOR ALT?
-                --return (v, body) -- Def Name is a tuple
+                <|> return (v, body) -- Def Name is a tuple
 
 -- EConstr Int Int
 parseConstr :: Parser (Expr Name)
@@ -102,9 +101,6 @@ parseAExpr = do v <- identifier
 -- case expr of alts
 -- ECase (Expr a) [Alter a]                  
 parseExpr :: Parser (Expr Name)
-            -- function application
-            -- needs precedence
-
             -- Scrivere funzioni separate
 parseExpr = do symbol "let"
                do symbol "rec"
@@ -160,7 +156,7 @@ parseExpr2 = do e3 <- parseExpr3
 -- RELOP
 -- relop = [< | <= | == | ~= | >= | >]
 relop :: [String]
-relop = ["< ","<=","==","~=",">=","> "]
+relop = ["<","<=","==","~=",">=",">"]
  
 {-
 -- Unsatisfactory solution...
@@ -267,8 +263,11 @@ test_prog = "f = 3; g x y = let z = x in z; h x = case (let y = x in y) of  <1> 
 test_prog2 = "f x y = case x of <1> -> case y of <1> -> 1; <2> -> 2;"
 -- Dangling else
 {- http://www.mathcs.emory.edu/~cheung/Courses/561/Syllabus/2-C/dangling-else.html
--}
+
+
 f x y = case x of
         1 -> case y of
              1 -> 1
         2 -> 2
+
+        -}
