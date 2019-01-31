@@ -1,39 +1,26 @@
+{-# OPTIONS_GHC -Wall #-}
 module Parser where
 
 import Expr
 import Parser_Utils
 
 import Control.Applicative
-import Data.Char
+--import Data.Char
 
 
 {-
-IMPORTANT NOTES:
-  
-  -- IMP - check for parenthesised expressions (SHOULD BE DONE)
-  -- IMP? - negate function (pg 17) (?)
-  -- Dangling else issue?
+Notes:
+  -- Dangling else issue
   -- IMP!!! - la cosa del "-3" =/= "- 3"
-  -- "> " vs ">"
-  
-  -- MEDIUM
-  -- Many some; performance problems?
-
   -- MINOR
   -- ignore comments (1.9)
   -- numbering ?
-SOLVDED:
-- Only works with integer numbers so far (ok)
-- atomic expression treatment of (expr) needs checking
-  -- In particular, things like "True" ? how to handle?
-      -- Should be Pack{1,0}. OR modify grammar.
--- identifier should discriminate with keywords (ok)
 -}
 
 
 parseProg :: Parser (Program Name)
 parseProg = do p <- parseScDef
-               do character ';'
+               do _  <- character ';'
                   ps <- parseProg
                   return (p:ps)
                  <|> 
@@ -43,7 +30,7 @@ parseProg = do p <- parseScDef
 parseScDef :: Parser (ScDef Name)
 parseScDef = do v  <- identifier      -- = parseVar
                 pf <- many identifier 
-                character '='         -- throw away
+                _  <- character '='         -- throw away
                 body <- parseExpr 
                 return (v, pf, body)
 
@@ -51,32 +38,31 @@ parseScDef = do v  <- identifier      -- = parseVar
 -- Def -> var = expr
 parseDef :: Parser (Def Name)
 parseDef = do v <- identifier
-              character '='
+              _ <- character '='
               body <- parseExpr
-              do character ';' 
+              do _ <- character ';' 
                  return (v, body) 
                 <|> return (v, body) -- Def Name is a tuple
 
 -- EConstr Int Int
 parseConstr :: Parser (Expr Name)
-parseConstr = do symbol "Pack{"
-              --   character '{'
-                 tag <- natural
-                 character ','
+parseConstr = do _     <- symbol "Pack{"
+                 tag   <- natural
+                 _     <- character ','
                  arity <- natural
-                 character '}'
+                 _     <- character '}'
                  return (EConstr tag arity)
 
 -- <num> var1_n -> expr
 -- Alter a = (Int, [a], Expr a)
 parseAlt :: Parser (Alter Name)
-parseAlt = do character '<' 
-              n <- integer
-              character '>'
+parseAlt = do _  <- character '<' 
+              n  <- integer
+              _  <- character '>'
               vs <- many identifier
-              symbol "->"
-              e <- parseExpr
-              do character ';'
+              _  <- symbol "->"
+              e  <- parseExpr
+              do _ <- character ';'
                  return (n,vs,e)
                 <|> return (n,vs,e)
 
@@ -91,9 +77,9 @@ parseAExpr = do v <- identifier
              do c <- parseConstr
                 return c
                <|>
-             do character '('
+             do _ <- character '('
                 e <- parseExpr
-                character ')'
+                _ <- character ')'
                 return e
              -- ( expr ) 
 
@@ -102,27 +88,27 @@ parseAExpr = do v <- identifier
 -- ECase (Expr a) [Alter a]                  
 parseExpr :: Parser (Expr Name)
             -- Scrivere funzioni separate
-parseExpr = do symbol "let"
-               do symbol "rec"
+parseExpr = do _ <- symbol "let"
+               do _     <- symbol "rec"
                   defns <- some parseDef
-                  symbol "in"
-                  body <- parseExpr
+                  _     <- symbol "in"
+                  body  <- parseExpr
                   return (ELet Recursive defns body)
                  <|>
                   do defns <- some parseDef
-                     symbol "in"
+                     _    <- symbol "in"
                      body <- parseExpr
                      return (ELet NonRecursive defns body)
               <|>     
-            do symbol "case"
-               e <- parseExpr
-               symbol "of"
+            do _    <- symbol "case"
+               e    <- parseExpr
+               _    <- symbol "of"
                alts <- some parseAlt
                return (ECase e alts)
               <|>
-            do character '\\'
+            do _  <- character '\\'
                vs <- some identifier
-               character '.'
+               _  <- character '.'
                e <- parseExpr
                return (ELam vs e)
               <|>
@@ -133,9 +119,9 @@ parseExpr = do symbol "let"
 -- associativity = right
 parseExpr1 :: Parser (Expr Name) 
 parseExpr1 = do e2 <- parseExpr2 
-                do c  <- character '|'
+                do c  <- symbol "|"
                    e1 <- parseExpr1
-                   return (EAp (EAp (EVar "|") (e2)) (e1))
+                   return (EAp (EAp (EVar c) (e2)) (e1))
                   <|> 
                    return e2 
                 
@@ -144,7 +130,7 @@ parseExpr1 = do e2 <- parseExpr2
 -- associativity = right
 parseExpr2 :: Parser (Expr Name)
 parseExpr2 = do e3 <- parseExpr3
-                do character '&'
+                do _  <- character '&'
                    e2 <- parseExpr2
                    return (EAp (EAp (EVar "&") (e3)) (e2))
                   <|> 
@@ -220,12 +206,12 @@ parseExpr3 = do e4 <- parseExpr4
 
 parseExpr4 :: Parser (Expr Name)
 parseExpr4 = do e5 <- parseExpr5
-                do character '+'
+                do _  <- character '+'
                    e4 <- parseExpr4
                    --return (EAp (EVar ('(':c:")")) (EAp (e5) (e4)))
                    return (EAp (EAp (EVar "+") (e5)) (e4))
                   <|>
-                   do character '-'
+                   do _  <- character '-'
                       er <- parseExpr5
                       return (EAp (EAp (EVar "-") (e5)) (er)) -- issue
                   <|>
@@ -237,11 +223,11 @@ parseExpr4 = do e5 <- parseExpr5
 -- associativity = right, none
 parseExpr5 :: Parser (Expr Name)
 parseExpr5 = do e6 <- parseExpr6
-                do character '*'
+                do _  <- character '*'
                    e5 <- parseExpr5
                    return (EAp (EAp (EVar "*") (e6)) (e5))
                   <|>
-                   do character '/'
+                   do _  <- character '/'
                       er <- parseExpr6
                       return (EAp (EAp (EVar "/") (e6)) (er))
                   <|>
@@ -256,10 +242,13 @@ parseExpr6 = do es <- some parseAExpr
                 where 
                   -- as we have a list
                   ap_chain :: [(Expr Name)] -> (Expr Name)
-                  ap_chain (x:xs) = foldl EAp x xs
+                  ap_chain xs = foldl1 EAp xs --foldl1?
+                  --ap_chain []     = foldl []
                   
 -- TEST
-test_prog = "f = 3; g x y = let z = x in z; h x = case (let y = x in y) of  <1> -> 2 <2> -> 5"
+test_prog :: String
+test_prog = "f = 3; g x y = let z = x in z; h x = case (let y = x in y) of  <1> -> 2; <2> -> 5"
+test_prog2 :: String
 test_prog2 = "f x y = case x of <1> -> case y of <1> -> 1; <2> -> 2;"
 -- Dangling else
 {- http://www.mathcs.emory.edu/~cheung/Courses/561/Syllabus/2-C/dangling-else.html

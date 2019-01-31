@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wall #-}
 module Expr where
 
 -- page 17
