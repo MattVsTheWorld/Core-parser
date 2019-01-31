@@ -1,5 +1,24 @@
 f = 3;
 g x y = let z = x in z;
+
 h x = case (let y = x in y) of
    <1> -> 2;
-   <2> -> 5
+   <2> -> 5;
+
+k = 15;
+u = k - f;
+var = 13;
+
+oct g x = let h = twice g
+          in let k = twice h
+          in k (k x);
+
+isRed c = case c of
+               <1> -> Pack{1,0};
+               <2> -> Pack{2,0};
+               <3> -> Pack{2,0};
+
+double_list xs = map (\ x. 2*x) xs;
+
+main = oct i 4
+

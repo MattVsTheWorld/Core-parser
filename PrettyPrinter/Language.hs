@@ -86,8 +86,8 @@ pprExpr (ELet isrec defns expr)
                     iStr "  ", iIndent (pprDefns defns), iNewline, -- Space and indent definition
                     iStr "in ", pprExpr expr] -- body
         where
-            keyword | not isrec = "let"
-                    | isrec     = "letrec"
+            keyword | isrec == NonRecursive = "let"
+                    | isrec == Recursive    = "letrec"
 
 pprDefns :: [(Name,CoreExpr)] -> Iseq
 pprDefns defns = iInterleave sep (map pprDefn defns) -- maps comprehension of definition and puts a ;\n in between each

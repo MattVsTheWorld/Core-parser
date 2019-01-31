@@ -56,10 +56,10 @@ lower = sat isLower
 {-
 upper :: Parser Char
 upper = sat isUpper
-
+-}
 letter :: Parser Char
 letter = sat isAlpha
--}
+
 -- small variation on isAlphanum to include the '_' character
 isVarch :: Char -> Bool
 isVarch c = isAlphaNum c || ( c == '_')
@@ -95,19 +95,20 @@ strings (x:xs) = do string x
 -- Parser for identifier (var name)
 -- lowercase letter followed by 0 or more (many) alphanum
 -- Added _ as a legal character for identifiers
--- added illegality of keywords ??
 keywords :: [String]
-keywords = ["let","letrec","in","case","of"{- ,Pack-}]
+keywords = ["let","letrec","in","case","of","Pack"]
 
 isNotKey :: String -> Parser String
 isNotKey xs = if all (/=xs) keywords 
            then return xs 
            else empty
 
+-- can put lower to enforce variables to start with a lowercase character
 ident :: Parser String 
 ident = lower         >>= \x  ->
+        --letter         >>= \x  ->
         many varch    >>= \xs ->
-        isNotKey  (x:xs) >>
+        isNotKey (x:xs) >>
         return (x:xs)
         {- do x  <- lower -- debatable point
            xs <- many varch
@@ -138,12 +139,12 @@ fractional = token fract
 -- Parser to remove spaces comprising zero or more space/tab/newlines
 -- () dummy result value
 space :: Parser ()
-space = do many (sat isSpace)
+space = do _ <- many (sat isSpace)
            return ()
 
 -- we can now do integers in general (+/-)
 int :: Parser Int
-int = do char '-'
+int = do _ <- char '-'
          n <- nat
          return (-n)
       <|> nat
@@ -153,9 +154,9 @@ int = do char '-'
 
 -- Ignores all spaces before and after applying a parser for a token
 token :: Parser a -> Parser a 
-token p = do space
+token p = do _ <- space
              v <- p
-             space
+             _ <- space
              return v
 
 -- can now define parsers that ignore spaces
@@ -171,9 +172,9 @@ integer = token int
 symbol :: String -> Parser String
 symbol xs = token (string xs)
 
--- ##
 character :: Char -> Parser Char
 character c = token (char c)
+
  
 -- Parse non empty list of natural numbers
 {-

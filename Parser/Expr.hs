@@ -49,6 +49,6 @@ type CoreScDef = ScDef Name
 ----------------
 
 data IsRec = NonRecursive | Recursive
-        deriving Show
+        deriving (Show,Eq)
 
 type Def a = (a, Expr a)
