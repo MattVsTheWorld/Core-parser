@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -Wall #-}
 module Expr where
 
--- page 17
 data Expr a 
             = EVar Name                 -- Variables    
             | ENum Int                  -- Numbers
@@ -15,14 +14,11 @@ data Expr a
                 (Expr a)                    -- Expression to scrutinise
                 [Alter a]                   -- Alternatives
             | ELam [a] (Expr a)         -- Lambda abstractions
-    deriving (Show)
+    deriving (Show, Eq)
 
 type CoreExpr = Expr Name
 type Name = String
 
-----------------
---    case    --
-----------------
 -- Case takes an expression to analyze + a list of alternatives
 -- Each alternative contains 
     -- (1) a tag = Int
@@ -36,18 +32,13 @@ type Program a = [ScDef a]
 type CoreProgram = Program Name
 
 -- a supercombinator definition contains
-    -- (supercombinator definition = can define functions/CFA if no args)
-        -- ~~ mathematical expression fully bound and self contained
     -- (1) name of the supercombinator = Name
     -- (2) its arguments = [a] (Can be empty)
     -- (3) its body = Expr a
 type ScDef a = (Name, [a], Expr a)
 type CoreScDef = ScDef Name
 
-----------------
--- Let/Letrec --
-----------------
-
+-- Let/Letrec
 data IsRec = NonRecursive | Recursive
         deriving (Show,Eq)
 
