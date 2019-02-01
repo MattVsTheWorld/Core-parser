@@ -4,7 +4,7 @@ import System.IO
 import Parser
 import Expr
 import Parser_Utils
-import PrettyPrint
+import PrettyPrinter
 
 readF :: IO String
 readF = do inh <- openFile "input.txt" ReadMode
@@ -12,17 +12,16 @@ readF = do inh <- openFile "input.txt" ReadMode
            hClose inh
            return prog
 
+-- Parse input file
 main :: IO (Program Name)
 main = do inp <- readF
           return (comp (parse parseProg inp))
 
-prettyPrint :: IO (Program Name) -> IO ()
-prettyPrint pg = do prog <- pg
-                    putStr (pprint prog)
-
-test :: IO ()
-test = prettyPrint main
-
+-- Pretty print parse created from input file          
+pprintInput :: IO ()
+pprintInput = prettyPrint main
+                where prettyPrint prog = prog >>= \pg -> putStr(pprint pg)
+                                 
 comp :: [(Program Name, Name)] -> Program Name
 comp []         = error "no parse"
 comp [(e,[])]   = e

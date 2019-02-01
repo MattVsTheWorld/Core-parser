@@ -1,4 +1,5 @@
-module PrettyPrint where
+{-# OPTIONS_GHC -Wall #-}
+module PrettyPrinter where
 import Expr
 
 ----------------------

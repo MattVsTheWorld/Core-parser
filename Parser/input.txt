@@ -7,7 +7,7 @@ h x = case (let y = x in y) of
 
 k = 15;
 u = k - f;
-var = 13;
+toggle = Pack{1,0} | Pack{2,0};
 
 oct g x = let h = twice g
           in let k = twice h
@@ -19,6 +19,8 @@ isRed c = case c of
                <3> -> Pack{2,0};
 
 double_list xs = map (\ x. 2*x) xs;
+
+quad_plus_one x = 1 + (let tx = x+x in tx+tx);
 
 main = oct i 4
 

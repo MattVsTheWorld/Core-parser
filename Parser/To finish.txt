@@ -2,3 +2,9 @@
 1 - finish pretty printer knock off
 2 - finish commenting
 -------------------------
+
+
+{-
+The do notation combines parsers in sequence, with the output string 
+from each parser in the sequence becoming the input string for the next.
+-}

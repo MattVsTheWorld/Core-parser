@@ -9,7 +9,7 @@ data Expr a
             | EAp (Expr a) (Expr a)     -- Applications
             | ELet                      -- Let(rec) expressions
                 IsRec                       -- NonRecursive | Recursive
-                [Def a]              -- Definitions
+                [Def a]                     -- Definitions
                 (Expr a)                    -- Body of let(rec)
             | ECase                     -- Case expression
                 (Expr a)                    -- Expression to scrutinise

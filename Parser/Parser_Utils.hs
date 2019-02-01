@@ -1,6 +1,8 @@
 module Parser_Utils where
 
 import Control.Applicative
+
+
 import Data.Char
 
 newtype Parser a = P (String -> [(a, String)])
@@ -42,6 +44,13 @@ instance Alternative Parser where
     p <|> q = P (\inp -> case parse p inp of
                         []        -> parse q inp
                         [(v,out)] -> [(v,out)])
+{-
+One or more:
+some :: f a -> f [a]
+
+Zero or more:
+many :: f a -> f [a]
+-}
 
 -- verifies a predicate, return a Parser Char
 sat :: (Char -> Bool) -> Parser Char
