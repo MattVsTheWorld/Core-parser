@@ -12,14 +12,14 @@ readF = do inh <- openFile "input.txt" ReadMode
            hClose inh
            return prog
 
--- Parse input file
+-- Parse input file.
 main :: IO (Program Name)
 main = do inp <- readF
           return (comp (parse parseProg inp))
 
--- Pretty print parse created from input file          
-pprintInput :: IO ()
-pprintInput = prettyPrint main
+-- Pretty print parse created from input file.    
+prettyI :: IO ()
+prettyI = prettyPrint main
                 where prettyPrint prog = prog >>= \pg -> putStr(pprint pg)
                                  
 comp :: [(Program Name, Name)] -> Program Name

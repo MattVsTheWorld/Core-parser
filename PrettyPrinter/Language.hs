@@ -38,7 +38,7 @@ iIndent seq = seq
 -- We use the more general function flatten
 
 -- Function flatten
--- @Takes   : list of iseq
+-- @Param   : list of iseq
 -- @Returns : result of concatenating each of the iseq in the list
 -- Accumulates pending work. Manipulates representation type rather than abstract type
 -- "By case" analysis: work-list

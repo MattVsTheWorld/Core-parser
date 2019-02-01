@@ -13,6 +13,8 @@ oct g x = let h = twice g
           in let k = twice h
           in k (k x);
 
+
+
 isRed c = case c of
                <1> -> Pack{1,0};
                <2> -> Pack{2,0};
@@ -20,7 +22,16 @@ isRed c = case c of
 
 double_list xs = map (\ x. 2*x) xs;
 
-quad_plus_one x = 1 + (let tx = x+x in tx+tx);
+quad_plus_one x = 1 + (let tx = x+x
+                           in tx+tx);
+
+infinite n = letrec ns = cons n ns
+                    in ns;
+
+multi x = let a = x+1;
+              b = x+2;
+              c = x+3
+              in a+b+c;
 
 main = oct i 4
 

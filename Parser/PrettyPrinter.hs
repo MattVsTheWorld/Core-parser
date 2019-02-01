@@ -2,14 +2,12 @@
 module PrettyPrinter where
 import Expr
 
-----------------------
---  Pretty Printer  -- 
-----------------------
 data IseqRep = INil
              | IStr String
              | IAppend IseqRep IseqRep
              | IIndent IseqRep
              | INewline
+                  deriving (Show)
 
 type  Iseq = IseqRep
 

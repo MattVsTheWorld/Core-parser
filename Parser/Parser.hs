@@ -24,8 +24,8 @@ parseProg = do p <- parseScDef
                  <|> 
                   return [p]
 
--- Parses a supercombinator (function) definition.
--- Composed of 1 or more variable identifier and the defining body (expression).
+-- Parses a supercombinator (function) definition, 
+-- composed of 1 or more variable identifier and the defining body (expression).
 parseScDef :: Parser (ScDef Name)
 parseScDef = do v    <- identifier            -- parseVar
                 pf   <- many identifier 
@@ -35,7 +35,7 @@ parseScDef = do v    <- identifier            -- parseVar
 
 
 -- Parses a single definition, composed by a single variable identifier and the defining expression.
--- The definition may or may not end with a semicolon.
+-- Definitions are separated by a semicolon (consequently, the last one will not).
 parseDef :: Parser (Def Name)
 parseDef = do v    <- identifier
               _    <- character '='
@@ -44,9 +44,8 @@ parseDef = do v    <- identifier
                  return (v, body) 
                 <|> return (v, body)          -- Def Name is a tuple (Name, Expr Name)
 
--- Parses a constructor for a structured type.
--- The core language provides a single family of constructors.
--- These are presented in the form Pack{tag, arity}.
+-- Parses a constructor for a structured type. The core language provides a single
+-- family of constructors, in the form Pack{tag, arity}.
 parseConstr :: Parser (Expr Name)
 parseConstr = do _     <- symbol "Pack{"
                  tag   <- natural
@@ -55,9 +54,8 @@ parseConstr = do _     <- symbol "Pack{"
                  _     <- character '}'
                  return (EConstr tag arity)   -- EConstr Int Int
 
--- Parses an alternative for a case expression.
--- each alternative consists of a <tag> followed by a number of variables,
--- followed by an expression to evaluate.
+-- Parses an alternative for a case expression. Each alternative consists of 
+-- a <tag> followed by a number of variables, followed by an expression to evaluate.
 parseAlt :: Parser (Alter Name)
 parseAlt = do _  <- character '<' 
               n  <- integer
@@ -86,8 +84,7 @@ parseAExpr = do v <- identifier
                 return e
 
 -- Parses a local definition. This may be non-recursive (let) or recursive (letrec).
--- The parser doesn't check if the definition is actually recursive or not.
--- Local definition constructs are expressions and may be used as such.
+-- The parser doesn NOT check if the definition is actually recursive or not.
 -- A local definition is composed by a series of definitions and a body expression.
 parseLet :: Parser (Expr Name)
 parseLet = do _ <- symbol "let"
@@ -102,11 +99,9 @@ parseLet = do _ <- symbol "let"
                   body  <- parseExpr
                   return (ELet NonRecursive defns body)  -- ELet IsRec [Def Name] (Expr Name)
 
--- Parses a case expression. This replaces all forms of pattern matching in the core language.
--- A case expression can be seen as a multi-way jump: there is an expression to evaluate,
--- whose evaluation returns a tag (part of the constructor). The tag points to the appropriate alternative.
--- NOTE: Each alternative is generally separated by a semicolon. The last semicolon represents the end
--- of the case expression. If such expression is the very last of the program, it might not have a semicolon.
+-- Parses a case expression. Composed of an expression to evaluate and a list of alternatives.
+-- Care must be taken; each alternative is separated by a semicolon. The last definition will be followed by  
+-- a semicolon representing the end case expression, to be parsed by parseProg (unless it is the very last expression).
 parseCase :: Parser (Expr Name)
 parseCase = do _    <- symbol "case"
                e    <- parseExpr
@@ -137,12 +132,11 @@ parseExpr = parseLet
            <|>
             parseExpr1
 
-------------------------------------------------------------------------------------------
---------------------------------    Expression parsing    --------------------------------       
-------------------------------------------------------------------------------------------
--- Note that nested do operators simulate partial expressions used by the book.
-
-
+--------------------------------------------------------------------------
+-- Expression parsing
+-- Note that the "do" operators are nested to avoid laborious reparsing.
+-- These simulate the creation of partial expressions used by the book.
+--------------------------------------------------------------------------
 
 -- OR boolean operator.
 -- expr1 -> expr2 || expr1 | expr2
@@ -151,7 +145,7 @@ parseExpr1 :: Parser (Expr Name)
 parseExpr1 = do e2 <- parseExpr2 
                 do _  <- character '|'
                    e1 <- parseExpr1
-                   return (EAp (EAp (EVar "|") (e2)) (e1))
+                   return (EAp (EAp (EVar "|") (e2)) (e1))     -- EAp (Expr Name) (Expr Name)
                   <|> 
                    return e2 
 
@@ -162,7 +156,7 @@ parseExpr2 :: Parser (Expr Name)
 parseExpr2 = do e3 <- parseExpr3
                 do _  <- character '&'
                    e2 <- parseExpr2
-                   return (EAp (EAp (EVar "&") (e3)) (e2))
+                   return (EAp (EAp (EVar "&") (e3)) (e2))     -- EAp (Expr Name) (Expr Name)
                   <|> 
                    return e3
                    
@@ -176,9 +170,10 @@ parseExpr3 :: Parser (Expr Name)
 parseExpr3 = do e4 <- parseExpr4
                 do rel <- strings relop
                    er  <- parseExpr4
-                   return (EAp (EAp (EVar rel) e4) er)
+                   return (EAp (EAp (EVar rel) e4) er)         -- EAp (Expr Name) (Expr Name)
                   <|>
                    return e4
+
 -- Addition and Difference operators.            
 -- expr4 -> expr5 + exp4 | expr5 - expr5 | expr5
 -- Associativity = Right (+), None (-)
@@ -188,12 +183,11 @@ parseExpr4 :: Parser (Expr Name)
 parseExpr4 = do e5 <- parseExpr5
                 do _  <- character '+'
                    e4 <- parseExpr4
-                   --return (EAp (EVar ('(':c:")")) (EAp (e5) (e4)))
-                   return (EAp (EAp (EVar "+") (e5)) (e4))
+                   return (EAp (EAp (EVar "+") (e5)) (e4))     -- EAp (Expr Name) (Expr Name)
                   <|>
                    do _  <- character '-'
                       er <- parseExpr5
-                      return (EAp (EAp (EVar "-") (e5)) (er)) -- issue
+                      return (EAp (EAp (EVar "-") (e5)) (er))  -- EAp (Expr Name) (Expr Name) ~~
                   <|>
                    return e5
 
@@ -204,33 +198,24 @@ parseExpr5 :: Parser (Expr Name)
 parseExpr5 = do e6 <- parseExpr6
                 do _  <- character '*'
                    e5 <- parseExpr5
-                   return (EAp (EAp (EVar "*") (e6)) (e5))
+                   return (EAp (EAp (EVar "*") (e6)) (e5))     -- EAp (Expr Name) (Expr Name)
                   <|>
                    do _  <- character '/'
                       er <- parseExpr6
-                      return (EAp (EAp (EVar "/") (e6)) (er))
+                      return (EAp (EAp (EVar "/") (e6)) (er))  -- EAp (Expr Name) (Expr Name)
                   <|>
                    return e6          
 
 -- Function application.
 -- expr6 -> aexpr_1... aepxr_n (n>=1)
 -- Associativity = Left
+-- Local function ap_chain. "Some" has type f a -> f [a], and hence returns a list of expressions.
+-- Note that by definition "some" returns at least one element, hence foldl1 can be used.
+-- @Param   : A list of expressions.
+-- @Returns : A single expression built with EAp constructors.
 parseExpr6 :: Parser (Expr Name)
 parseExpr6 = do es <- some parseAExpr               
                 return (ap_chain es)
                 where 
-                  -- as we have a list
                   ap_chain :: [(Expr Name)] -> (Expr Name)
                   ap_chain xs = foldl1 EAp xs 
-       
-{-
--- TEST
-test_prog :: String
-test_prog = "f = 3; g x y = let z = x in z; h x = case (let y = x in y) of  <1> -> 2; <2> -> 5; k = 15; u = k + f"
-test_prog2 :: String
-test_prog2 = "f x y = case x of <1> -> case y of <1> -> 1; <2> -> 2;"
--- Dangling else
-{- http://www.mathcs.emory.edu/~cheung/Courses/561/Syllabus/2-C/dangling-else.html
--}
--}
-

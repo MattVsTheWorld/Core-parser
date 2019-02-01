@@ -1,6 +1,5 @@
 -------------------------
 1 - finish pretty printer knock off
-2 - finish commenting
 -------------------------
 
 
@@ -8,3 +7,23 @@
 The do notation combines parsers in sequence, with the output string 
 from each parser in the sequence becoming the input string for the next.
 -}
+
+{-
+One or more:
+some :: f a -> f [a]
+
+Zero or more:
+many :: f a -> f [a]
+-}
+
+       
+{-
+-- TEST
+test_prog :: String
+test_prog = "f = 3; g x y = let z = x in z; h x = case (let y = x in y) of  <1> -> 2; <2> -> 5; k = 15; u = k + f"
+test_prog2 :: String
+test_prog2 = "f x y = case x of <1> -> case y of <1> -> 1; <2> -> 2;"
+-- Dangling else
+http://www.mathcs.emory.edu/~cheung/Courses/561/Syllabus/2-C/dangling-else.html
+-}
+
