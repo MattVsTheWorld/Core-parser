@@ -1,8 +1,6 @@
 {-# OPTIONS_GHC -Wall #-}
 module PrettyPrinter_Utils where
 
-import Expr
-
 data Iseq = INil
             | IStr String
             | IAppend Iseq Iseq
@@ -66,11 +64,3 @@ iInterleave :: Iseq -> [Iseq] -> Iseq
 iInterleave _   []  = INil
 iInterleave _   [x] = x 
 iInterleave iseq (x:xs) = (x `iAppend`  iseq) `iAppend` iInterleave iseq xs
-
--- Function isAtomicExpr
--- @Params  : an Expr.
--- @Returns : A Boolean value that specifies whether Expr is atomic or not.
-isAtomicExpr :: Expr a -> Bool
-isAtomicExpr (EVar _)   =  True
-isAtomicExpr (ENum _)   =  True
-isAtomicExpr _          =  False

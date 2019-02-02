@@ -4,6 +4,11 @@ module PrettyPrinter where
 import Expr
 import PrettyPrinter_Utils
 
+isAtomicExpr :: Expr a -> Bool
+isAtomicExpr (EVar _)   =  True
+isAtomicExpr (ENum _)   =  True
+isAtomicExpr _          =  False
+
 -- Pretty print expressions, case analysis.
 pprExpr :: CoreExpr -> Iseq
 pprExpr (ENum n)    = iNum n
