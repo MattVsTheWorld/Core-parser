@@ -58,7 +58,7 @@ isAtomicExpr (ENum n) = True
 isAtomicExpr e        = False -- ?
 
 pprAExpr :: CoreExpr -> Iseq
-pprAExpr e -- ##
+pprAExpr e
     | isAtomicExpr e    = pprExpr e
     | otherwise         = (iStr "(") `iAppend` pprExpr e `iAppend` (iStr ")")
 

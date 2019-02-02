@@ -15,6 +15,10 @@ import Control.Applicative
 -------------------------------------------------------------------
 -}
 
+
+-- Note: The do notation combines parsers in sequence, with the output string 
+-- from each parser in the sequence becoming the input string for the next.
+
 -- Parses a program, composed of supercombinators (functions) separated by semicolons.
 parseProg :: Parser (Program Name)
 parseProg = do p <- parseScDef

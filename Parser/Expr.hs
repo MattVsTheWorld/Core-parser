@@ -14,7 +14,7 @@ data Expr a
                 (Expr a)                    -- Expression to scrutinise
                 [Alter a]                   -- Alternatives
             | ELam [a] (Expr a)         -- Lambda abstractions
-    deriving (Show, Eq)
+    deriving Show
 
 type CoreExpr = Expr Name
 type Name = String
