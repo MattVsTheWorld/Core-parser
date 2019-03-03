@@ -107,9 +107,9 @@ keywords = ["let","letrec","in","case","of","Pack"]
 
 -- Determine whether a variable is using an illegal keyword.
 isNotKey :: String -> Parser String
-isNotKey = (\xs -> if all (/=xs) keywords 
+isNotKey = \xs -> if all (/=xs) keywords 
                     then return xs 
-                    else empty)
+                    else empty
 
 -- Parser for a variable (identifier).
 -- A variable is a lowercase letter followed by 0 or more (many) alphanum.
