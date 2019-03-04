@@ -115,9 +115,9 @@ isNotKey = (\xs -> if all (/=xs) keywords
 -- A variable is a lowercase letter followed by 0 or more (many) alphanum.
 -- NOTE: swap to lower to allow identifiers that start with uppercase letters.
 ident :: Parser String 
-ident = lower         >>= \x  ->
+ident = lower           >>= \x  ->
         --letter         >>= \x  ->
-        many varch    >>= \xs ->
+        many varch      >>= \xs ->
         isNotKey (x:xs) >>
         return (x:xs)
            
